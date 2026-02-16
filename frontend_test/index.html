@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera Feed Test</title>
+</head>
+<body>
+
+<h2>MindTrace – Camera Feed Test</h2>
+
+<button onclick="startCamera()">Start Camera</button>
+<button onclick="stopCamera()">Stop Camera</button>
+
+<br><br><!DOCTYPE html>
+<html>
+<head>
+    <title>MindTrace Camera Test</title>
+</head>
+<body>
+
+<h2>MindTrace – Camera Stream Test</h2>
+
+<button onclick="startAgent()">Start</button>
+<button onclick="pauseAgent()">Pause</button>
+<button onclick="resumeAgent()">Resume</button>
+<button onclick="stopAgent()">Stop</button>
+
+<br><br>
+
+<img id="video"
+     src=""
+     width="640"
+     height="480"
+     alt="Camera Feed"/>
+
+<script>
+const API = "http://127.0.0.1:8000";
+
+function startAgent() {
+    fetch(`${API}/start`)
+        .then(() => {
+            document.getElementById("video").src = `${API}/video`;
+        });
+}
+
+function pauseAgent() {
+    fetch(`${API}/pause`);
+}
+
+function resumeAgent() {
+    fetch(`${API}/resume`);
+}
+
+function stopAgent() {
+    fetch(`${API}/stop`)
+        .then(() => {
+            document.getElementById("video").src = "";
+        });
+}
+</script>
+
+</body>
+</html>
+
+
+<img id="video" width="640" height="480" />
+
+<script>
+    function startCamera() {
+        fetch("http://127.0.0.1:8000/start_agent", {
+            method: "POST"
+        }).then(() => {
+            document.getElementById("video").src =
+                "http://127.0.0.1:8000/video_feed";
+        });
+    }
+
+    function stopCamera() {
+        fetch("http://127.0.0.1:8000/stop_agent", {
+            method: "POST"
+        }).then(() => {
+            document.getElementById("video").src = "";
+        });
+    }
+</script>
+
+</body>
+</html>

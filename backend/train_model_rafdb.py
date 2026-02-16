@@ -12,11 +12,12 @@ from tqdm import tqdm
 # CONFIG
 # ----------------------------------------------------------
 DATASET_DIR = "dataset1"
-BATCH_SIZE = 64
-EPOCHS = 60                 
+BATCH_SIZE = 32  # Reduced for better generalization
+EPOCHS = 100  # Increased with early stopping              
 IMG_SIZE = 96
 NUM_CLASSES = 7
-LR = 5e-5
+LR = 1e-3  # Higher initial LR with scheduler
+EARLY_STOP_PATIENCE = 15  # Stop if no improvement for 15 epochs
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -25,18 +26,26 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # ----------------------------------------------------------
 train_tfms = transforms.Compose([
     transforms.Resize((IMG_SIZE, IMG_SIZE)),
-    transforms.RandomHorizontalFlip(),
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomRotation(degrees=15),  # Increased rotation
     transforms.RandomAffine(
-        degrees=10,
-        translate=(0.05, 0.05),
-        scale=(0.95, 1.05)
+        degrees=15,  # Increased from 10
+        translate=(0.1, 0.1),  # Increased from 0.05
+        scale=(0.9, 1.1)  # Wider scale range
     ),
-    transforms.ColorJitter(brightness=0.15, contrast=0.15),
+    transforms.ColorJitter(
+        brightness=0.2,  # Increased
+        contrast=0.2,    # Increased
+        saturation=0.15,  # Added saturation
+        hue=0.05         # Added hue jitter
+    ),
+    transforms.RandomGrayscale(p=0.1),  # Occasionally convert to grayscale
     transforms.ToTensor(),
     transforms.Normalize(
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225]
-    )
+    ),
+    transforms.RandomErasing(p=0.3, scale=(0.02, 0.15))  # CutOut augmentation
 ])
 
 val_tfms = transforms.Compose([
@@ -57,12 +66,24 @@ class EmotionResNet18(nn.Module):
         self.model = models.resnet18(
             weights=models.ResNet18_Weights.DEFAULT
         )
-        self.model.fc = nn.Linear(
-            self.model.fc.in_features, num_classes
+        
+        # Replace the final fully connected layer with a more complex head
+        num_features = self.model.fc.in_features
+        self.model.fc = nn.Identity()  # Remove original fc layer
+        
+        # Enhanced classification head with dropout and batch norm
+        self.classifier = nn.Sequential(
+            nn.Dropout(0.3),
+            nn.Linear(num_features, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Dropout(0.4),
+            nn.Linear(256, num_classes)
         )
 
     def forward(self, x):
-        return self.model(x)
+        features = self.model(x)
+        return self.classifier(features)
 
 # ----------------------------------------------------------
 # TRAINING FUNCTION
@@ -111,34 +132,51 @@ def train():
     # ---------------- MODEL ----------------
     model = EmotionResNet18(NUM_CLASSES).to(DEVICE)
 
-    # Freeze early layers
+    # Freeze early layers, unfreeze deeper layers for fine-tuning
     for param in model.model.parameters():
         param.requires_grad = False
 
+    # Unfreeze layer2, layer3, layer4 for better feature adaptation
+    for param in model.model.layer2.parameters():
+        param.requires_grad = True
+        
     for param in model.model.layer3.parameters():
         param.requires_grad = True
 
     for param in model.model.layer4.parameters():
         param.requires_grad = True
 
-    for param in model.model.fc.parameters():
+    # Always train the classifier head
+    for param in model.classifier.parameters():
         param.requires_grad = True
 
     # ---------------- LOSS / OPT ----------------
     criterion = nn.CrossEntropyLoss(
         weight=class_weights,
-        label_smoothing=0.05
+        label_smoothing=0.1  # Increased for better regularization
     )
 
     optimizer = optim.AdamW(
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=LR,
-        weight_decay=1e-4
+        weight_decay=5e-4,  # Increased regularization
+        betas=(0.9, 0.999)
+    )
+    
+    # Learning rate scheduler with warmup
+    scheduler = optim.lr_scheduler.OneCycleLR(
+        optimizer,
+        max_lr=LR,
+        epochs=EPOCHS,
+        steps_per_epoch=len(train_loader),
+        pct_start=0.1,  # 10% warmup
+        anneal_strategy='cos'
     )
 
     scaler = torch.amp.GradScaler("cuda")
 
     best_val_acc = 0.0
+    patience_counter = 0
 
     # ---------------- TRAIN LOOP ----------------
     for epoch in range(EPOCHS):
@@ -161,6 +199,7 @@ def train():
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
+            scheduler.step()  # Update learning rate
 
             preds = outputs.argmax(dim=1)
             correct += (preds == labels).sum().item()
@@ -196,7 +235,17 @@ def train():
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
+            patience_counter = 0
             torch.save(model.state_dict(), "best_model_rafdb.pth")
+            print(f"✓ New best model saved! Val Acc: {val_acc:.2f}%")
+        else:
+            patience_counter += 1
+            print(f"No improvement for {patience_counter} epoch(s)")
+            
+        # Early stopping
+        if patience_counter >= EARLY_STOP_PATIENCE:
+            print(f"\nEarly stopping triggered after {epoch+1} epochs")
+            break
 
     # ---------------- FINAL REPORT ----------------
     print("\nBest Validation Accuracy:", best_val_acc)
