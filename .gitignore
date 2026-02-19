@@ -1,20 +1,8 @@
-<<<<<<< HEAD
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-=======
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
->>>>>>> 0beb18d15dc73f25c394303872ec495d9baeacc3
 .Python
 build/
 develop-eggs/
@@ -28,7 +16,6 @@ parts/
 sdist/
 var/
 wheels/
-<<<<<<< HEAD
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -59,7 +46,9 @@ pnpm-debug.log*
 # MindTrace Specific
 # Backend Data & Models
 backend/snapshots/
-backend/dataset*/
+backend/dataset/
+backend/dataset1/
+backend/dataset2/
 backend/users.json
 backend/*.pth
 backend/*.pt
@@ -73,64 +62,6 @@ logs/
 # OS Generated
 Thumbs.db
 Desktop.ini
-=======
-*.egg-info/
-.installed.cfg
-*.egg
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Local configuration
-*.local
-
-# Logs
-*.log
-logs/
->>>>>>> 0beb18d15dc73f25c394303872ec495d9baeacc3
+# Screenshots
+Screenshot*.png
