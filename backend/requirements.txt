@@ -5,7 +5,7 @@ passlib[bcrypt]
 python-jose[cryptography]
 python-multipart
 opencv-python
-mediapipe
+mediapipe==0.10.14
 numpy
 torch
 torchvision
