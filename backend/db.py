@@ -7,7 +7,13 @@ import shared_state
 # ----------------------------------------------------------
 # MONGODB CONNECTION
 # ----------------------------------------------------------
-MONGO_URI = "mongodb://localhost:27017"
+import os
+
+# ----------------------------------------------------------
+# MONGODB CONNECTION
+# ----------------------------------------------------------
+# Use environment variable for production, fallback to localhost for dev
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = "mindtrace_db"
 
 client = MongoClient(MONGO_URI)

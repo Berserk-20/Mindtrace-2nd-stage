@@ -448,7 +448,9 @@ def get_emotions_for_session(session_id: str, current_user: dict = Depends(get_c
 # =====================================================
 
 # JWT settings
-SECRET_KEY = "mindtrace-secret-key-change-in-production"  # TODO: Move to environment variable
+# JWT settings
+SECRET_KEY = os.getenv("SECRET_KEY", "mindtrace-secret-key-change-in-production")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 

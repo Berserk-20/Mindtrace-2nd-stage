@@ -54,7 +54,7 @@ backend/*.pth
 backend/*.pt
 *.pth
 *.pt
-
+*.ckpt
 # Logs
 logs/
 *.log
@@ -65,3 +65,6 @@ Desktop.ini
 
 # Screenshots
 Screenshot*.png
+
+# Model training files
+train*.py
