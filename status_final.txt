@@ -1,0 +1,45 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   .gitignore
+	new file:   .vscode/settings.json
+	new file:   backend
+	deleted:    backend/.env.example
+	deleted:    backend/__pycache__/api.cpython-310.pyc
+	deleted:    backend/__pycache__/background_agent.cpython-310.pyc
+	deleted:    backend/__pycache__/shared_state.cpython-310.pyc
+	deleted:    backend/api.py
+	deleted:    backend/auth.py
+	deleted:    backend/background_agent.py
+	deleted:    backend/check_cam.py
+	deleted:    backend/check_db_connection.py
+	deleted:    backend/create_admin.py
+	deleted:    backend/dashboard.py
+	deleted:    backend/db.py
+	deleted:    backend/inspect_db.py
+	deleted:    backend/notifier.py
+	deleted:    backend/requirements.txt
+	deleted:    backend/runtime.txt
+	deleted:    backend/shared_state.py
+	deleted:    backend/test_signup.py
+	deleted:    backend/train.py
+	deleted:    backend/train_model_rafdb.py
+	deleted:    backend/train_model_resnet18.py
+	deleted:    backend/update_user_name.py
+	deleted:    backend/verify_admin.py
+	deleted:    backend/verify_backend.py
+	new file:   git_status2.txt
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+  (commit or discard the untracked or modified content in submodules)
+	modified:   backend (modified content, untracked content)
+	modified:   frontend/mindtrace-insights (modified content)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	status_final.txt
+

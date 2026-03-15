@@ -56,7 +56,7 @@ def load_emotion_model():
     global emotion_model
     try:
         model = EmotionResNet18(num_classes=7)
-        model.load_state_dict(torch.load("best_model_rafdb.pth", map_location=DEVICE))
+        model.load_state_dict(torch.load("models/best_model_rafdb.pth", map_location=DEVICE))
         model.to(DEVICE)
         model.eval()
         emotion_model = model
