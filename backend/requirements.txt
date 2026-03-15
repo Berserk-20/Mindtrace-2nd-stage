@@ -4,7 +4,7 @@ pydantic[email]
 passlib[bcrypt]
 python-jose[cryptography]
 python-multipart
-opencv-python
+opencv-python-headless
 mediapipe==0.10.14
 numpy
 torch
@@ -13,4 +13,3 @@ Pillow
 pymongo
 gunicorn==21.2.0
 python-dotenv==1.0.1
-pymongo
