@@ -98,33 +98,10 @@ INFERENCE_INTERVAL = 0.05 # Faster inference checks (limited by actual speed)
 CONFIDENCE_THRESHOLD = 0.4
 FACE_PERSISTENCE = 2.0  # Increased to prevent flickering
 
-SNAPSHOT_COOLDOWN = 3.0  # seconds between saves
-
 # RAF-DB emotion classes (7 emotions)
 RAF_DB_EMOTIONS = ["Angry", "Disgust", "Fear", "Happy", "Neutral", "Sad", "Surprise"]
 EMOTIONS = RAF_DB_EMOTIONS  # Use RAF-DB classes
 emotion_buffer = deque(maxlen=6)
-
-# ==============================
-# SNAPSHOT STATE
-# ==============================
-last_snapshot_time = 0
-
-# ==============================
-# DIRECTORY SETUP
-# ==============================
-BASE_DIR = "snapshots"
-ENGAGEMENT_DIR = os.path.join(BASE_DIR, "engagement")
-EXPR_DIR = os.path.join(BASE_DIR, "expressions")
-
-for d in [
-    f"{ENGAGEMENT_DIR}/engaged",
-    # f"{ENGAGEMENT_DIR}/neutral", # distinct from expression neutral
-    f"{ENGAGEMENT_DIR}/disengaged",
-    *[f"{EXPR_DIR}/{e.lower()}" for e in EMOTIONS],
-]:
-    os.makedirs(d, exist_ok=True)
-
 
 # ==============================
 # MEDIAPIPE SETUP
@@ -321,7 +298,7 @@ def get_engagement_score(emotion, is_looking_away=False, blink_rate=15):
 # INFERENCE LOOP
 # ==============================
 def inference_loop():
-    global last_face, last_face_time, last_emotion, last_snapshot_time
+    global last_face, last_face_time, last_emotion
     global eye_closed_frames, total_blinks, looking_away_frames, is_looking_away
     global blinks_in_window, blink_start_time
 
@@ -441,30 +418,6 @@ def inference_loop():
                     if len(shared_state.ENGAGEMENT_HISTORY) > 1000:
                         shared_state.ENGAGEMENT_HISTORY.pop(0)
 
-            # ---------- SNAPSHOT CAPTURE ----------
-            if now - last_snapshot_time > SNAPSHOT_COOLDOWN:
-                timestamp = time.strftime("%Y%m%d_%H%M%S")
-                
-                if not shared_state.SNAPSHOT_COUNTS:
-                    shared_state.SNAPSHOT_COUNTS = {e: 0 for e in EMOTIONS}
-
-                if shared_state.SNAPSHOT_COUNTS.get(last_emotion, 0) < 3:
-                    expr_path = f"{EXPR_DIR}/{last_emotion.lower()}/{timestamp}.jpg"
-                    cv2.imwrite(expr_path, frame)
-                    shared_state.SNAPSHOT_COUNTS[last_emotion] = shared_state.SNAPSHOT_COUNTS.get(last_emotion, 0) + 1
-                    print(f"Saved snapshot for {last_emotion} ({shared_state.SNAPSHOT_COUNTS[last_emotion]}/3)")
-
-                engagement = get_engagement(last_emotion)
-                
-                if engagement != "neutral":
-                    if shared_state.SNAPSHOT_COUNTS.get(engagement, 0) < 3:
-                        eng_path = f"{ENGAGEMENT_DIR}/{engagement}/{timestamp}.jpg"
-                        cv2.imwrite(eng_path, frame)
-                        shared_state.SNAPSHOT_COUNTS[engagement] = shared_state.SNAPSHOT_COUNTS.get(engagement, 0) + 1
-                        print(f"Saved snapshot for {engagement} ({shared_state.SNAPSHOT_COUNTS[engagement]}/3)")
-
-                last_snapshot_time = now
-        
         else:
             # If no face found, maybe reset after some time?
             # For now, we trust FACE_PERSISTENCE in the render loop to hide the box
@@ -564,7 +517,6 @@ def stop_agent():
         shared_state.ENGAGEMENT_HISTORY = []
         shared_state.DISTRACTION_EVENTS = []
         shared_state.CURRENT_SESSION_ID = None  # Reset session ID
-        shared_state.SNAPSHOT_COUNTS = {}  # Reset snapshot counts
     
     # Clear the latest frame so camera feed disappears
     with shared_state.FRAME_LOCK:

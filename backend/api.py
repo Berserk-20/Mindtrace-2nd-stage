@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, validator
 import json
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -37,14 +40,15 @@ app = FastAPI(title="MindTrace API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:8080",
-        "http://localhost:5173",
+        "https://your-mindtrace-frontend.vercel.app",  # Production URL
+        "http://localhost:8080",                       # Local dev
+        "http://localhost:5173",                       # Local dev
         "http://127.0.0.1:8080",
         "http://127.0.0.1:5173"
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 # =====================================================
@@ -449,7 +453,9 @@ def get_emotions_for_session(session_id: str, current_user: dict = Depends(get_c
 
 # JWT settings
 # JWT settings
-SECRET_KEY = os.getenv("SECRET_KEY", "mindtrace-secret-key-change-in-production")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("CRITICAL: SECRET_KEY environment variable is not set!")
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440

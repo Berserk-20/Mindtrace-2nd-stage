@@ -45,13 +45,13 @@ pnpm-debug.log*
 
 # MindTrace Specific
 # Backend Data & Models
-backend/snapshots/
-backend/dataset/
-backend/dataset1/
-backend/dataset2/
-backend/users.json
-backend/*.pth
-backend/*.pt
+snapshots/
+dataset/
+dataset1/
+dataset2/
+users.json
+*.pth
+*.pt
 *.pth
 *.pt
 *.ckpt

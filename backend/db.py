@@ -8,15 +8,49 @@ import shared_state
 # MONGODB CONNECTION
 # ----------------------------------------------------------
 import os
+import sys
+import time
+import logging
+from pymongo.errors import ConnectionFailure
 
-# ----------------------------------------------------------
-# MONGODB CONNECTION
-# ----------------------------------------------------------
+# Set up basic logging for the database connection
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
 # Use environment variable for production, fallback to localhost for dev
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = "mindtrace_db"
 
-client = MongoClient(MONGO_URI)
+def _connect_with_health_check(uri: str, max_retries: int = 3, timeout_ms: int = 5000):
+    """
+    Establish a MongoDB connection with health checks, retries, and fail-fast timeouts.
+    Fails fast if Atlas (or local server) is unreachable within timeout_ms.
+    Instantiates a fresh MongoClient on each retry attempt.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.info(f"Connecting to MongoDB... (Attempt {attempt}/{max_retries})")
+            # Fail fast if server selection timeout is exceeded
+            client = MongoClient(uri, serverSelectionTimeoutMS=timeout_ms)
+            
+            # 'ping' command performs a health check to ensure the server is responsive
+            client.admin.command('ping')
+            logger.info("Successfully connected to MongoDB!")
+            return client
+        except ConnectionFailure as e:
+            logger.warning(f"MongoDB connection failed on attempt {attempt}: {e}")
+            if hasattr(locals(), 'client') and client is not None:
+                client.close()  # Clean up failed client
+            
+            if attempt < max_retries:
+                logger.info("Retrying in 2 seconds...")
+                time.sleep(2)
+            else:
+                logger.error("Max retries reached. MongoDB is unreachable.")
+                raise RuntimeError("Failed to connect to MongoDB Atlas after multiple retries. Check connection string and network access.")
+
+client = _connect_with_health_check(MONGO_URI)
 db = client[DB_NAME]
 
 sessions_col = db["sessions"]

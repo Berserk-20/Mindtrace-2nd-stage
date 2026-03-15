@@ -4,7 +4,12 @@ from jose import JWTError, jwt
 from typing import Dict
 
 # JWT settings - must match api.py
-SECRET_KEY = "mindtrace-secret-key-change-in-production"
+import os
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("CRITICAL: SECRET_KEY environment variable is not set!")
+
 ALGORITHM = "HS256"
 
 security = HTTPBearer()
@@ -37,3 +42,4 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
