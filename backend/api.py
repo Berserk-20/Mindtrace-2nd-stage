@@ -19,13 +19,7 @@ import numpy as np
 from bson import ObjectId
 
 import shared_state
-from background_agent import (
-    start_agent_thread,
-    stop_agent,
-    pause_agent,
-    resume_agent,
-    get_engagement_score
-)
+# background_agent imports removed to prevent blocking on fastAPI startup
 from db import create_user, authenticate_user, user_exists, get_user_sessions, create_session, end_session, log_emotion, get_last_session_timeline_data, get_emotion_distribution, get_emotion_transitions, get_session_emotion_breakdown, get_recent_system_events, get_user_profile, get_user_summary, emotions_col, sessions_col
 from auth import get_current_user
 
@@ -111,9 +105,6 @@ def video_feed():
 # =====================================================
 @app.get("/start")
 def start(current_user: dict = Depends(get_current_user)):
-    if shared_state.AGENT_RUNNING:
-        return JSONResponse({"success": False, "message": "Agent already running"})
-    
     # Store current user email
     shared_state.CURRENT_USER_EMAIL = current_user["email"]
     
@@ -121,71 +112,82 @@ def start(current_user: dict = Depends(get_current_user)):
     session_id = create_session(current_user["email"])
     shared_state.CURRENT_SESSION_ID = session_id
     
-    start_agent_thread()
+    # Agent disabled on cloud deployment to prevent worker timeout
     return JSONResponse({
         "success": True,
-        "agent_running": True,
+        "message": "Agent disabled on cloud deployment",
+        "agent_running": False,
         "session_id": session_id
     })
 
 @app.get("/pause")
 def pause(current_user: dict = Depends(get_current_user)):
-    pause_agent()
-    return JSONResponse({
+    try:
+        from background_agent import pause_agent
+        pause_agent()
+    except Exception as e:
+        print("Pause agent skipped:", e)
+    
+    return {
         "success": True,
         "paused": True
-    })
+    }
 
 @app.get("/resume")
 def resume(current_user: dict = Depends(get_current_user)):
-    resume_agent()
-    return JSONResponse({
+    try:
+        from background_agent import resume_agent
+        resume_agent()
+    except Exception as e:
+        print("Resume agent skipped:", e)
+    
+    return {
         "success": True,
         "paused": False
-    })
+    }
 
 @app.get("/stop")
 def stop(current_user: dict = Depends(get_current_user)):
-    # Save session data before stopping
+    try:
+        from background_agent import stop_agent, get_engagement_score
+    except Exception as e:
+        print("Stop agent skipped:", e)
+        stop_agent = None
+        get_engagement_score = None
+
+    # 👇 KEEP YOUR EXISTING DB LOGIC SAME
     if shared_state.CURRENT_SESSION_ID:
-        # Log all emotion and engagement data to database with their actual detection timestamps
         with shared_state.DATA_LOCK:
             for emotion_data in shared_state.EMOTION_HISTORY:
-                # Convert Unix timestamp to datetime
                 from datetime import datetime
                 detection_time = datetime.fromtimestamp(emotion_data["timestamp"])
-                
-                # Calculate Focus Score
-                # Check for pre-calculated fused score (Face Mesh logic)
+
                 if "focus_score" in emotion_data:
                     raw_score = emotion_data["focus_score"]
-                else:
-                    # Fallback for old data or if feature disabled
-                    # get_engagement_score returns 0-100
+                elif get_engagement_score:
                     raw_score = get_engagement_score(emotion_data["emotion"])
-                
+                else:
+                    raw_score = 50  # fallback
+
                 focus_score = raw_score / 100.0
-                
+
                 log_emotion(
                     shared_state.CURRENT_SESSION_ID,
                     emotion_data["emotion"],
                     focus_score,
-                    timestamp=detection_time  # Pass the actual detection time
+                    timestamp=detection_time
                 )
-            
-            # You could also save engagement data if needed
-            # for eng_data in shared_state.ENGAGEMENT_HISTORY:
-            #     db.log_engagement(shared_state.CURRENT_SESSION_ID, eng_data["score"])
-        
-        # End the session in database
+
         end_session(shared_state.CURRENT_SESSION_ID)
         shared_state.CURRENT_SESSION_ID = None
-    
-    stop_agent()
-    return JSONResponse({
+
+    if stop_agent:
+        stop_agent()
+
+    return {
         "success": True,
         "agent_running": False
-    })
+    }
 
 # =====================================================
 # HEALTH CHECK (DEBUG / TEST)
@@ -594,3 +596,7 @@ def read_users_me(current_user: dict = Depends(get_current_user)):
     if not user_profile:
         raise HTTPException(status_code=404, detail="User not found")
     return user_profile
+
+@app.get("/")
+def home():
+    return {"message": "MindTrace API is running 🚀"}
