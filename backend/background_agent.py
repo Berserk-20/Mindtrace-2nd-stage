@@ -51,9 +51,11 @@ transform = transforms.Compose([
     )
 ])
 
-# Load model on startup
-def load_emotion_model():
+# Load model lazily
+def get_emotion_model():
     global emotion_model
+    if emotion_model is not None:
+        return emotion_model
     try:
         model = EmotionResNet18(num_classes=7)
         model.load_state_dict(torch.load("models/best_model_rafdb.pth", map_location=DEVICE))
@@ -65,9 +67,7 @@ def load_emotion_model():
         print(f"⚠ Warning: Could not load emotion model: {e}")
         print("  Using random predictions as fallback")
         emotion_model = None
-
-# Load model when module imports
-load_emotion_model()
+    return emotion_model
 
 # ==============================
 # MEDIAPIPE AND OTHER IMPORTS
@@ -107,12 +107,18 @@ emotion_buffer = deque(maxlen=6)
 # MEDIAPIPE SETUP
 # ==============================
 mp_face_mesh = mp.solutions.face_mesh
-face_mesh = mp_face_mesh.FaceMesh(
-    max_num_faces=1,
-    refine_landmarks=True,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5
-)
+face_mesh_instance = None
+
+def get_face_mesh():
+    global face_mesh_instance
+    if face_mesh_instance is None:
+        face_mesh_instance = mp_face_mesh.FaceMesh(
+            max_num_faces=1,
+            refine_landmarks=True,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        )
+    return face_mesh_instance
 
 # ==============================
 # FACE STATE
@@ -200,7 +206,8 @@ def get_head_pose(landmarks, w, h):
 # ==============================
 def predict_emotion(face_img):
     """Predict emotion from face ROI using trained model"""
-    if emotion_model is None:
+    model = get_emotion_model()
+    if model is None:
         # Fallback to random if model failed to load
         return np.random.choice(EMOTIONS), np.random.uniform(0.4, 0.95)
     
@@ -214,7 +221,7 @@ def predict_emotion(face_img):
         
         # Inference
         with torch.no_grad():
-            outputs = emotion_model(img_tensor)
+            outputs = model(img_tensor)
             probs = torch.softmax(outputs, dim=1)
             
             # --- Heuristic Bias Correction ---
@@ -322,7 +329,7 @@ def inference_loop():
         
         # Format for FaceMesh
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = face_mesh.process(rgb)
+        results = get_face_mesh().process(rgb)
 
         if results.multi_face_landmarks:
             landmarks = results.multi_face_landmarks[0].landmark

@@ -52,13 +52,12 @@ app.add_middleware(
 )
 
 # =====================================================
-# START BACKGROUND AGENT ON SERVER START
+# STARTUP EVENT
 # =====================================================
 @app.on_event("startup")
 def startup_event():
+    # Application startup logic (background agent starts only via /start API)
     pass
-    # if not shared_state.AGENT_RUNNING:
-    #     start_agent_thread()
 
 # =====================================================
 # VIDEO STREAM (MJPEG)
