@@ -1,15 +1,8 @@
 from fastapi import FastAPI, HTTPException, Body, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
+
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # 👈 IMPORTANT (temporary fix)
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 from pydantic import BaseModel, EmailStr, validator
 import json
 import os
@@ -43,15 +36,15 @@ app = FastAPI(title="MindTrace API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://your-mindtrace-frontend.vercel.app",  # Production URL
+        "https://mindtrace-insights.vercel.app",  # Production URL
         "http://localhost:8080",                       # Local dev
         "http://localhost:5173",                       # Local dev
         "http://127.0.0.1:8080",
         "http://127.0.0.1:5173"
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # =====================================================
