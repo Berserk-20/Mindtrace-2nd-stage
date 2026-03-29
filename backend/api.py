@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, Body, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
+
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 👈 IMPORTANT (temporary fix)
