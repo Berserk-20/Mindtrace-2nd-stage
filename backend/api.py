@@ -1,6 +1,12 @@
 from fastapi import FastAPI, HTTPException, Body, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 👈 IMPORTANT (temporary fix)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 from pydantic import BaseModel, EmailStr, validator
 import json
 import os
