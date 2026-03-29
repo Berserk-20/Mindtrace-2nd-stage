@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Body, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 app.add_middleware(
