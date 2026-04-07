@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Body, Depends
+from fastapi import FastAPI, HTTPException, Body, Depends, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +25,8 @@ import shared_state
 from db import create_user, authenticate_user, user_exists, get_user_sessions, create_session, end_session, log_emotion, get_last_session_timeline_data, get_emotion_distribution, get_emotion_transitions, get_session_emotion_breakdown, get_recent_system_events, get_user_profile, get_user_summary, emotions_col, sessions_col
 from auth import get_current_user
 
+import base64
+
 # =====================================================
 # FASTAPI APP
 # =====================================================
@@ -35,7 +37,11 @@ app = FastAPI(title="MindTrace API")
 # =====================================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TEMP for testing
+    allow_origins=[
+    "http://localhost:5173",
+    "https://mindtrace-insights.vercel.app",
+    "*"
+],  # TEMP for testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -100,24 +106,35 @@ def video_feed():
 # AGENT CONTROL ENDPOINTS
 # =====================================================
 @app.get("/start")
-def start(current_user: dict = Depends(get_current_user)):
+def start():
+    # TEMP user for testing
+    user_email = "test@gmail.com"
+
     # Store current user email
-    shared_state.CURRENT_USER_EMAIL = current_user["email"]
+    shared_state.CURRENT_USER_EMAIL = user_email
     
     # Create session in database
-    session_id = create_session(current_user["email"])
+    session_id = create_session(user_email)
     shared_state.CURRENT_SESSION_ID = session_id
+
+    # Start the agent dynamically to prevent startup blocking
+    try:
+        from background_agent import start_agent_thread
+        start_agent_thread()
+        agent_running = True
+    except Exception as e:
+        print("Start agent failed:", e)
+        agent_running = False
     
-    # Agent disabled on cloud deployment to prevent worker timeout
     return JSONResponse({
         "success": True,
-        "message": "Agent disabled on cloud deployment",
-        "agent_running": False,
+        "message": "Session started",
+        "agent_running": agent_running,
         "session_id": session_id
     })
 
 @app.get("/pause")
-def pause(current_user: dict = Depends(get_current_user)):
+def pause():
     try:
         from background_agent import pause_agent
         pause_agent()
@@ -130,7 +147,7 @@ def pause(current_user: dict = Depends(get_current_user)):
     }
 
 @app.get("/resume")
-def resume(current_user: dict = Depends(get_current_user)):
+def resume():
     try:
         from background_agent import resume_agent
         resume_agent()
@@ -143,7 +160,7 @@ def resume(current_user: dict = Depends(get_current_user)):
     }
 
 @app.get("/stop")
-def stop(current_user: dict = Depends(get_current_user)):
+def stop():
     try:
         from background_agent import stop_agent, get_engagement_score
     except Exception as e:
@@ -201,7 +218,7 @@ def health():
 # METRICS ENDPOINT (REPLACES MOCK DATA)
 # =====================================================
 @app.get("/metrics")
-def get_metrics(current_user: dict = Depends(get_current_user)):
+def get_metrics():
     # Helper to safe get list
     with shared_state.DATA_LOCK:
         emotion_history = list(shared_state.EMOTION_HISTORY)
@@ -227,7 +244,7 @@ def get_metrics(current_user: dict = Depends(get_current_user)):
 
     # 2. Emotion Timeline Data
     # Get data from last completed session instead of live data
-    user_email = current_user["email"]
+    user_email = shared_state.CURRENT_USER_EMAIL or "test@gmail.com"
     last_session_data = get_last_session_timeline_data(user_email)
     
     emotionTimelineData = []
@@ -326,15 +343,14 @@ def get_metrics(current_user: dict = Depends(get_current_user)):
     ]
 
     # 5. Sessions (Real data from MongoDB, filtered by user)
-    user_email = current_user["email"]
     sessions = get_user_sessions(user_email)
 
     # 6. Emotion Distribution
     # Calculate from history (Real data from DB)
-    emotionDistribution = get_emotion_distribution(user_id=current_user["email"])
+    emotionDistribution = get_emotion_distribution(user_id=user_email)
 
     # 7. Emotion Transitions (Real data from DB)
-    emotionTransitions = get_emotion_transitions(user_id=current_user["email"])
+    emotionTransitions = get_emotion_transitions(user_id=user_email)
 
     # 8. Live Metrics
     # Get latest
@@ -368,10 +384,10 @@ def get_metrics(current_user: dict = Depends(get_current_user)):
     }
 
     # 9. Session Emotion Breakdown (Real data from DB)
-    sessionEmotions = get_session_emotion_breakdown(user_id=current_user["email"], limit=5)
+    sessionEmotions = get_session_emotion_breakdown(user_id=user_email, limit=5)
 
     # 10. System Events (Real data from DB)
-    systemEvents = get_recent_system_events(user_id=current_user["email"], limit=5)
+    systemEvents = get_recent_system_events(user_id=user_email, limit=5)
 
     return {
         "kpiData": kpiData,
@@ -541,6 +557,23 @@ def login(user: UserLogin):
         },
         "token": access_token
     }
+
+@app.post("/analyze")
+async def analyze(request: Request):
+    data = await request.json()
+    image_data = data["image"]
+
+    # Decode base64 image
+    header, encoded = image_data.split(",", 1)
+    img_bytes = base64.b64decode(encoded)
+
+    np_arr = np.frombuffer(img_bytes, np.uint8)
+    frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+    # 🔥 Replace with your ML logic
+    emotion = "neutral"
+
+    return {"emotion": emotion}
 
 # =====================================================
 # REPORTS AND ALERTS ENDPOINTS
