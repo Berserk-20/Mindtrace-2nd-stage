@@ -98,26 +98,55 @@ def get_user_sessions(user_id: str):
     Returns a list of session objects with engagement and emotion data.
     """
     user_sessions = list(sessions_col.find({"user_id": user_id}).sort("start_time", -1))
+    if not user_sessions:
+        return []
     
+    session_ids = [str(s["_id"]) for s in user_sessions]
+    
+    # Use aggregation to quickly get stats for all sessions at once
+    pipeline = [
+        {"$match": {"session_id": {"$in": session_ids}}},
+        {"$group": {
+            "_id": {"session_id": "$session_id", "emotion": "$emotion"},
+            "count": {"$sum": 1},
+            "avg_focus_per_emotion": {"$avg": "$focus_level"}
+        }},
+        {"$group": {
+            "_id": "$_id.session_id",
+            "emotions": {"$push": {"emotion": "$_id.emotion", "count": "$count"}},
+            "total_count": {"$sum": "$count"},
+            "weighted_focus": {"$sum": {"$multiply": ["$avg_focus_per_emotion", "$count"]}}
+        }}
+    ]
+    
+    stats_map = {}
+    try:
+        agg_results = list(emotions_col.aggregate(pipeline))
+        for res in agg_results:
+            sid = res["_id"]
+            totalc = res["total_count"]
+            avgf = res["weighted_focus"] / totalc if totalc > 0 else 0
+            
+            # Find dominant emotion
+            dominant = "Neutral"
+            max_count = 0
+            for e in res["emotions"]:
+                if e["count"] > max_count:
+                    max_count = e["count"]
+                    dominant = e["emotion"]
+                    
+            stats_map[sid] = {"avg_focus": avgf * 100, "dominant_emotion": dominant} # Multiply by 100 if focus_level was 0-1
+    except Exception as e:
+        print("Aggregation error:", e)
+        pass
+
     result = []
     for session in user_sessions:
         session_id = str(session["_id"])
         
-        # Get emotions for this session
-        session_emotions = list(emotions_col.find({"session_id": session_id}))
-        
-        # Calculate metrics
-        if session_emotions:
-            avg_focus = sum(e["focus_level"] for e in session_emotions) / len(session_emotions)
-            # Find dominant emotion
-            emotion_counts = {}
-            for e in session_emotions:
-                emotion = e["emotion"]
-                emotion_counts[emotion] = emotion_counts.get(emotion, 0) + 1
-            dominant_emotion = max(emotion_counts, key=emotion_counts.get) if emotion_counts else "Neutral"
-        else:
-            avg_focus = 0
-            dominant_emotion = "Neutral"
+        stats = stats_map.get(session_id, {"avg_focus": 0, "dominant_emotion": "Neutral"})
+        avg_focus = stats["avg_focus"]
+        dominant_emotion = stats["dominant_emotion"]
         
         # Calculate duration
         start_time = session.get("start_time")
@@ -126,10 +155,10 @@ def get_user_sessions(user_id: str):
         # Handle active sessions
         if end_time is None:
              if session_id == shared_state.CURRENT_SESSION_ID:
+                 from datetime import datetime
                  end_time = datetime.now()
              else:
                  # It's a "zombie" session (crashed/stopped without updating DB)
-                 # Find the last emotion timestamp to determine when it actually ended
                  last_entry = emotions_col.find_one({"session_id": session_id}, sort=[("timestamp", -1)])
                  if last_entry:
                      end_time = last_entry["timestamp"]
@@ -137,13 +166,14 @@ def get_user_sessions(user_id: str):
                      end_time = start_time
         
         if start_time and end_time:
-            # Ensure both are datetime objects
+            from datetime import datetime
             if isinstance(start_time, datetime) and isinstance(end_time, datetime):
                 duration_seconds = (end_time - start_time).total_seconds()
             else:
                 duration_seconds = 0
         else:
             duration_seconds = 0
+            
         hours = int(duration_seconds // 3600)
         minutes = int((duration_seconds % 3600) // 60)
         duration_str = f"{hours}h {minutes}m" if hours > 0 else f"{minutes}m"
@@ -228,6 +258,11 @@ def log_emotion(session_id: str, emotion: str, focus_level: float, timestamp=Non
         "emotion": emotion,
         "focus_level": round(float(focus_level), 3)
     })
+
+def log_emotions_batch(docs: list):
+    """Log a batch of emotions extremely quickly using insert_many"""
+    if docs:
+        emotions_col.insert_many(docs)
 
 # ----------------------------------------------------------
 # SYSTEM EVENTS / NOTIFICATIONS

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Body, Depends, Request
+from fastapi import FastAPI, HTTPException, Body, Depends, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse, JSONResponse
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -58,57 +58,52 @@ def startup_event():
 # =====================================================
 # VIDEO STREAM (MJPEG)
 # =====================================================
-def generate_frames():
-    last_sent = 0
-    STREAM_FPS = 10
-    INTERVAL = 1.0 / STREAM_FPS
+from pydantic import BaseModel
+import base64
+import numpy as np
 
-    while True:
-        now = time.time()
-        if now - last_sent < INTERVAL:
-            time.sleep(0.005)
-            continue
-        last_sent = now
+class FramePayload(BaseModel):
+    image_base64: str
 
-        with shared_state.FRAME_LOCK:
-            frame = (
-                shared_state.LATEST_FRAME.copy()
-                if shared_state.LATEST_FRAME is not None
-                else None
-            )
-
+# =====================================================
+# STATELESS CLIENT-SIDE PROCESSING ENDPOINT
+# =====================================================
+@app.post("/analyze_frame")
+def analyze_frame(payload: FramePayload, current_user: dict = Depends(get_current_user)):
+    try:
+        img_str = payload.image_base64
+        if "," in img_str:
+            img_str = img_str.split(",")[1]
+            
+        img_bytes = base64.b64decode(img_str)
+        np_arr = np.frombuffer(img_bytes, np.uint8)
+        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        
         if frame is None:
-            time.sleep(0.05)
-            continue
-
-        ret, buffer = cv2.imencode(".jpg", frame)
-        if not ret:
-            continue
-
-        yield (
-            b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n"
-            + buffer.tobytes()
-            + b"\r\n"
-        )
-
-# =====================================================
-# STREAM ENDPOINT
-# =====================================================
-@app.get("/video")
-def video_feed():
-    return StreamingResponse(
-        generate_frames(),
-        media_type="multipart/x-mixed-replace; boundary=frame"
-    )
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=400, content={"error": "Invalid image data"})
+            
+        from background_agent import process_single_frame
+        result = process_single_frame(frame)
+        return result
+    except Exception as e:
+        print("Error processing frame:", e)
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 # =====================================================
 # AGENT CONTROL ENDPOINTS
 # =====================================================
+def background_start_agent():
+    try:
+        from background_agent import start_agent_thread
+        start_agent_thread()
+    except Exception as e:
+        print("Start agent failed:", e)
+
 @app.get("/start")
-def start():
-    # TEMP user for testing
-    user_email = "test@gmail.com"
+def start(background_tasks: BackgroundTasks, current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"]
 
     # Store current user email
     shared_state.CURRENT_USER_EMAIL = user_email
@@ -117,19 +112,13 @@ def start():
     session_id = create_session(user_email)
     shared_state.CURRENT_SESSION_ID = session_id
 
-    # Start the agent dynamically to prevent startup blocking
-    try:
-        from background_agent import start_agent_thread
-        start_agent_thread()
-        agent_running = True
-    except Exception as e:
-        print("Start agent failed:", e)
-        agent_running = False
+    # Add to background tasks so API returns instantly while ML pipeline loads
+    background_tasks.add_task(background_start_agent)
     
     return JSONResponse({
         "success": True,
         "message": "Session started",
-        "agent_running": agent_running,
+        "agent_running": True,
         "session_id": session_id
     })
 
@@ -159,8 +148,36 @@ def resume():
         "paused": False
     }
 
+def background_stop_agent(session_id, history_snapshot, get_eng_score):
+    docs = []
+    from datetime import datetime
+    for emotion_data in history_snapshot:
+        detection_time = datetime.fromtimestamp(emotion_data["timestamp"])
+
+        if "focus_score" in emotion_data:
+            raw_score = emotion_data["focus_score"]
+        elif get_eng_score:
+            raw_score = get_eng_score(emotion_data["emotion"])
+        else:
+            raw_score = 50
+
+        focus_score = raw_score / 100.0
+
+        docs.append({
+            "session_id": session_id,
+            "timestamp": detection_time,
+            "emotion": emotion_data["emotion"],
+            "focus_level": round(float(focus_score), 3)
+        })
+
+    if docs:
+        from db import log_emotions_batch
+        log_emotions_batch(docs)
+        
+    end_session(session_id)
+
 @app.get("/stop")
-def stop():
+def stop(background_tasks: BackgroundTasks):
     try:
         from background_agent import stop_agent, get_engagement_score
     except Exception as e:
@@ -171,28 +188,12 @@ def stop():
     # 👇 KEEP YOUR EXISTING DB LOGIC SAME
     if shared_state.CURRENT_SESSION_ID:
         with shared_state.DATA_LOCK:
-            for emotion_data in shared_state.EMOTION_HISTORY:
-                from datetime import datetime
-                detection_time = datetime.fromtimestamp(emotion_data["timestamp"])
+            # Snapshot the history so we can release the lock immediately
+            history_snapshot = list(shared_state.EMOTION_HISTORY)
 
-                if "focus_score" in emotion_data:
-                    raw_score = emotion_data["focus_score"]
-                elif get_engagement_score:
-                    raw_score = get_engagement_score(emotion_data["emotion"])
-                else:
-                    raw_score = 50  # fallback
-
-                focus_score = raw_score / 100.0
-
-                log_emotion(
-                    shared_state.CURRENT_SESSION_ID,
-                    emotion_data["emotion"],
-                    focus_score,
-                    timestamp=detection_time
-                )
-
-        end_session(shared_state.CURRENT_SESSION_ID)
+        session_id = shared_state.CURRENT_SESSION_ID
         shared_state.CURRENT_SESSION_ID = None
+        background_tasks.add_task(background_stop_agent, session_id, history_snapshot, get_engagement_score)
 
     if stop_agent:
         stop_agent()
@@ -217,8 +218,53 @@ def health():
 # =====================================================
 # METRICS ENDPOINT (REPLACES MOCK DATA)
 # =====================================================
+@app.get("/metrics/live")
+def get_live_metrics():
+    """Lightweight endpoint that only returns live session metrics without triggering heavy DB aggregations."""
+    with shared_state.DATA_LOCK:
+        emotion_history = list(shared_state.EMOTION_HISTORY)
+        engagement_history = list(shared_state.ENGAGEMENT_HISTORY)
+        session_start = shared_state.SESSION_START_TIME
+
+    if engagement_history:
+        current_eng = engagement_history[-1]["score"]
+    else:
+        current_eng = 0
+
+    current_emotion = emotion_history[-1]["emotion"] if emotion_history else "Neutral"
+    emotion_confidence = emotion_history[-1]["confidence"] if emotion_history else 0.0
+    
+    # Calculate session duration accounting for paused time
+    duration_str = "00:00:00"
+    if session_start:
+        if shared_state.PAUSE_REQUESTED and shared_state.PAUSE_START_TIME:
+            elapsed = shared_state.PAUSE_START_TIME - session_start - shared_state.TOTAL_PAUSED_TIME
+        elif shared_state.PAUSE_REQUESTED:
+            elapsed = 0
+        else:
+            elapsed = time.time() - session_start - shared_state.TOTAL_PAUSED_TIME
+        
+        elapsed = max(0, elapsed)
+        duration_str = time.strftime("%H:%M:%S", time.gmtime(elapsed))
+
+    liveMetrics = {
+        "currentEmotion": current_emotion,
+        "emotionConfidence": round(emotion_confidence, 2),
+        "engagementLevel": round(current_eng, 1),
+        "attentionScore": round(current_eng * 0.95, 1),
+        "sessionDuration": duration_str,
+        "sessionStartTime": session_start,
+    }
+
+    return {
+        "liveMetrics": liveMetrics,
+        "agentRunning": shared_state.AGENT_RUNNING
+    }
+
 @app.get("/metrics")
-def get_metrics():
+def get_metrics(current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"]
+    
     # Helper to safe get list
     with shared_state.DATA_LOCK:
         emotion_history = list(shared_state.EMOTION_HISTORY)

@@ -79,24 +79,10 @@ import shared_state
 # THREAD HANDLE
 # ==============================
 # ==============================
-# THREAD HANDLE
-# ==============================
-agent_thread = None
-inference_thread = None
-processing_lock = threading.Lock()
-frame_for_processing = None
-
-# ==============================
 # CONFIG
 # ==============================
-CAMERA_INDEX = 0
-
-TARGET_FPS = 15
-FRAME_INTERVAL = 1.0 / TARGET_FPS
-
-INFERENCE_INTERVAL = 0.05 # Faster inference checks (limited by actual speed)
-CONFIDENCE_THRESHOLD = 0.4
 FACE_PERSISTENCE = 2.0  # Increased to prevent flickering
+CONFIDENCE_THRESHOLD = 0.4
 
 # RAF-DB emotion classes (7 emotions)
 RAF_DB_EMOTIONS = ["Angry", "Disgust", "Fear", "Happy", "Neutral", "Sad", "Surprise"]
@@ -299,200 +285,122 @@ def get_engagement_score(emotion, is_looking_away=False, blink_rate=15):
     return max(0, min(100, score))
 
 # ==============================
-# AGENT LOOP
 # ==============================
+# STATELESS AGENT PROCESSOR
 # ==============================
-# INFERENCE LOOP
-# ==============================
-def inference_loop():
-    global last_face, last_face_time, last_emotion
-    global eye_closed_frames, total_blinks, looking_away_frames, is_looking_away
-    global blinks_in_window, blink_start_time
 
-    while shared_state.AGENT_RUNNING:
-        if shared_state.PAUSE_REQUESTED:
-            time.sleep(0.1)
-            continue
-
-        # Get latest frame for processing
-        frame = None
-        with processing_lock:
-            if frame_for_processing is not None:
-                frame = frame_for_processing.copy()
-        
-        if frame is None:
-            time.sleep(0.01)
-            continue
-            
-        now = time.time()
-        h, w, _ = frame.shape
-        
-        # Format for FaceMesh
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = get_face_mesh().process(rgb)
-
-        if results.multi_face_landmarks:
-            landmarks = results.multi_face_landmarks[0].landmark
-            
-            # --- HEAD POSE ---
-            pitch, yaw, roll = get_head_pose(landmarks, w, h)
-            
-            # Check looking away
-            if abs(yaw) > 20 or abs(pitch) > 20:
-                looking_away_frames += 1
-            else:
-                looking_away_frames = max(0, looking_away_frames - 1)
-            
-            is_looking_away = looking_away_frames > 2 
-            
-            # --- BLINK DETECTION ---
-            left_eye_indices = [33, 160, 158, 133, 153, 144]
-            right_eye_indices = [362, 385, 387, 263, 373, 380]
-            
-            left_eye_landmarks = [landmarks[i] for i in left_eye_indices]
-            right_eye_landmarks = [landmarks[i] for i in right_eye_indices]
-            
-            left_ear = calculate_ear(left_eye_landmarks, w, h)
-            right_ear = calculate_ear(right_eye_landmarks, w, h)
-            avg_ear = (left_ear + right_ear) / 2.0
-            
-            if avg_ear < BLINK_THRESHOLD:
-                eye_closed_frames += 1
-            else:
-                if eye_closed_frames >= 1: # Valid blink
-                    total_blinks += 1
-                    blinks_in_window.append(now)
-                eye_closed_frames = 0
-            
-            # Calculate Blink Rate
-            current_window_blinks = [t for t in blinks_in_window if now - t <= 60]
-            bpm = len(current_window_blinks) 
-            if now - blink_start_time < 60 and now - blink_start_time > 5:
-                # Avoid division by zero
-                elapsed = max(1, now - blink_start_time)
-                bpm = int(bpm * (60 / elapsed))
-
-            # --- FACE ROI for Emotion ---
-            x_min, y_min = w, h
-            x_max, y_max = 0, 0
-            for lm in landmarks:
-                x, y = int(lm.x * w), int(lm.y * h)
-                if x < x_min: x_min = x
-                if y < y_min: y_min = y
-                if x > x_max: x_max = x
-                if y > y_max: y_max = y
-            
-            pad = 20
-            x_min = max(0, x_min - pad)
-            y_min = max(0, y_min - pad)
-            x_max = min(w, x_max + pad)
-            y_max = min(h, y_max + pad)
-            
-            # Update global face state safely
-            last_face = (x_min, y_min, x_max-x_min, y_max-y_min)
-            last_face_time = now
-
-            face_roi = frame[y_min:y_max, x_min:x_max]
-            if face_roi.size > 0:
-                emotion, conf = predict_emotion(face_roi)
-
-                if conf < CONFIDENCE_THRESHOLD:
-                    emotion = "Neutral"
-
-                emotion_buffer.append(emotion)
-                last_emotion = max(set(emotion_buffer), key=emotion_buffer.count)
-
-                # Update shared state history
-                with shared_state.DATA_LOCK:
-                    eng_score = get_engagement_score(last_emotion, is_looking_away, bpm)
-
-                    shared_state.EMOTION_HISTORY.append({
-                        "timestamp": now,
-                        "emotion": last_emotion,
-                        "confidence": float(conf),
-                        "focus_score": eng_score
-                    })
-                    
-                    shared_state.ENGAGEMENT_HISTORY.append({
-                        "timestamp": now,
-                        "score": eng_score,
-                        "head_pose": "Away" if is_looking_away else "Center",
-                        "blink_rate": bpm
-                    })
-                    
-                    if len(shared_state.EMOTION_HISTORY) > 1000:
-                        shared_state.EMOTION_HISTORY.pop(0)
-                    if len(shared_state.ENGAGEMENT_HISTORY) > 1000:
-                        shared_state.ENGAGEMENT_HISTORY.pop(0)
-
-        else:
-            # If no face found, maybe reset after some time?
-            # For now, we trust FACE_PERSISTENCE in the render loop to hide the box
-            pass
-            
-        # Small sleep to prevent tight loop if processing is super fast (unlikely)
-        time.sleep(0.01)
-
-# ==============================
-# AGENT LOOP (VIDEO & RENDER)
-# ==============================
-def run_agent():
-    global frame_for_processing
+def process_single_frame(frame):
+    """
+    Process a single frame coming from the frontend via POST.
+    Updates the shared state history for metrics.
+    """
+    import shared_state
+    import time
+    import cv2
+    import numpy as np
     
-    cap = cv2.VideoCapture(CAMERA_INDEX)
-    if not cap.isOpened():
-        shared_state.AGENT_RUNNING = False
-        return
+    if not shared_state.AGENT_RUNNING or shared_state.PAUSE_REQUESTED:
+        return {"emotion": "Neutral", "focus_score": 50, "face_found": False, "confidence": 1.0}
 
-    last_frame_time = 0
+    global last_face, last_face_time, last_emotion
+    global eye_closed_frames, total_blinks, blink_start_time
+    global looking_away_frames, is_looking_away
+    
+    now = time.time()
+    h, w = frame.shape[:2]
+    
+    # Run MediaPipe Face Mesh
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    mesh = get_face_mesh()
+    results = mesh.process(rgb_frame)
 
-    while shared_state.AGENT_RUNNING:
+    face_found = False
+    
+    if results.multi_face_landmarks:
+        face_found = True
+        landmarks = results.multi_face_landmarks[0].landmark
+        
+        # Disable blink computation because 1 FPS is too slow for blink tracking
+        # But evaluate head pose for distraction tracking
+        pitch, yaw, roll = get_head_pose(landmarks, w, h)
+        if abs(yaw) > 30 or pitch > 30 or pitch < -30:
+            looking_away_frames += 1
+            if looking_away_frames >= 2:  # Adjusted for 1FPS
+                is_looking_away = True
+        else:
+            looking_away_frames = 0
+            is_looking_away = False
+            
+        # Bounding box for ResNet
+        x_min, y_min = w, h
+        x_max, y_max = 0, 0
+        for lm in landmarks:
+            x, y = int(lm.x * w), int(lm.y * h)
+            if x < x_min: x_min = x
+            if y < y_min: y_min = y
+            if x > x_max: x_max = x
+            if y > y_max: y_max = y
+        
+        pad = 20
+        x_min = max(0, x_min - pad)
+        y_min = max(0, y_min - pad)
+        x_max = min(w, x_max + pad)
+        y_max = min(h, y_max + pad)
+        
+        last_face = (x_min, y_min, x_max-x_min, y_max-y_min)
+        last_face_time = now
 
-        if shared_state.PAUSE_REQUESTED:
-            time.sleep(0.05)
-            continue
+        face_roi = frame[y_min:y_max, x_min:x_max]
+        if face_roi.size > 0:
+            emotion, conf = predict_emotion(face_roi)
 
-        now = time.time()
-        if now - last_frame_time < FRAME_INTERVAL:
-            time.sleep(0.005)
-            continue
-        last_frame_time = now
+            if conf < CONFIDENCE_THRESHOLD:
+                emotion = "Neutral"
 
-        ret, frame = cap.read()
-        if not ret:
-            continue
+            emotion_buffer.append(emotion)
+            last_emotion = max(set(emotion_buffer), key=emotion_buffer.count)
 
-        # Update frame for processing thread
-        with processing_lock:
-            frame_for_processing = frame.copy()
+            # Update shared state history
+            with shared_state.DATA_LOCK:
+                bpm = 15 # Default/mocked since blinked tracker is disabled
+                eng_score = get_engagement_score(last_emotion, is_looking_away, bpm)
 
-        # ---------- Overlay ----------
-        # Use last known face status (updated by inference thread)
-        # Check persistence - if inference hasn't updated face in X seconds, hide it
-        if last_face and (now - last_face_time) <= FACE_PERSISTENCE:
-            x, y, bw, bh = last_face
-            cv2.rectangle(frame, (x, y), (x+bw, y+bh), (0,255,0), 2)
-            cv2.putText(
-                frame,
-                last_emotion,
-                (x, y-10),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.9,
-                (0,255,0),
-                2
-            )
-
-        # Update stream frame
-        with shared_state.FRAME_LOCK:
-            shared_state.LATEST_FRAME = frame.copy()
-
-    cap.release()
+                shared_state.EMOTION_HISTORY.append({
+                    "timestamp": now,
+                    "emotion": last_emotion,
+                    "confidence": float(conf),
+                    "focus_score": eng_score
+                })
+                
+                shared_state.ENGAGEMENT_HISTORY.append({
+                    "timestamp": now,
+                    "score": eng_score,
+                    "head_pose": "Away" if is_looking_away else "Center",
+                    "blink_rate": bpm
+                })
+                
+                if len(shared_state.EMOTION_HISTORY) > 1000:
+                    shared_state.EMOTION_HISTORY.pop(0)
+                if len(shared_state.ENGAGEMENT_HISTORY) > 1000:
+                    shared_state.ENGAGEMENT_HISTORY.pop(0)
+                    
+            return {
+                "emotion": last_emotion, 
+                "focus_score": eng_score, 
+                "face_found": True, 
+                "confidence": float(conf)
+            }
+            
+    # If no face found
+    return {"emotion": "Neutral", "focus_score": 0, "face_found": False, "confidence": 1.0}
 
 # ==============================
-# THREAD CONTROLS
+# SESSION CONTROLS
 # ==============================
 def start_agent_thread():
-    global agent_thread, inference_thread
+    import shared_state
+    import time
+    # Only marks state as running, no threads spawned
     if shared_state.AGENT_RUNNING:
         return
     shared_state.AGENT_RUNNING = True
@@ -502,20 +410,12 @@ def start_agent_thread():
         if shared_state.SESSION_START_TIME is None:
             shared_state.SESSION_START_TIME = time.time()
 
-    # Start Inference Thread
-    inference_thread = threading.Thread(target=inference_loop, daemon=True)
-    inference_thread.start()
-
-    # Start Video/Agent Thread
-    agent_thread = threading.Thread(target=run_agent, daemon=True)
-    agent_thread.start()
-
 def stop_agent():
-    """Stop the agent and reset all session state"""
+    import shared_state
+    
     shared_state.AGENT_RUNNING = False
     shared_state.PAUSE_REQUESTED = False
     
-    # Reset all session state
     with shared_state.DATA_LOCK:
         shared_state.SESSION_START_TIME = None
         shared_state.PAUSE_START_TIME = None
@@ -523,21 +423,22 @@ def stop_agent():
         shared_state.EMOTION_HISTORY = []
         shared_state.ENGAGEMENT_HISTORY = []
         shared_state.DISTRACTION_EVENTS = []
-        shared_state.CURRENT_SESSION_ID = None  # Reset session ID
-    
-    # Clear the latest frame so camera feed disappears
+        shared_state.CURRENT_SESSION_ID = None
+        
     with shared_state.FRAME_LOCK:
         shared_state.LATEST_FRAME = None
 
 def pause_agent():
-    """Pause the agent and track pause start time"""
+    import shared_state
+    import time
     if not shared_state.PAUSE_REQUESTED:
         shared_state.PAUSE_REQUESTED = True
         with shared_state.DATA_LOCK:
             shared_state.PAUSE_START_TIME = time.time()
 
 def resume_agent():
-    """Resume the agent and accumulate paused time"""
+    import shared_state
+    import time
     if shared_state.PAUSE_REQUESTED:
         shared_state.PAUSE_REQUESTED = False
         with shared_state.DATA_LOCK:
