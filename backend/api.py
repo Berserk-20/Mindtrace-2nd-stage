@@ -42,7 +42,7 @@ app.add_middleware(
     "https://mindtrace-insights.vercel.app",
     "*"
 ],  # TEMP for testing
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -658,7 +658,7 @@ def get_admin_stats(current_user: dict = Depends(get_current_user)):
     total_users = len(users_summary)
     total_sessions = sum(u["total_sessions"] for u in users_summary)
     total_emotions = sum(u["total_emotions"] for u in users_summary)
-    active_sessions = 0 # TODO: Calculate real active sessions if needed
+    active_sessions = sum(u.get("active_sessions", 0) for u in users_summary)
     
     return {
         "stats": {
