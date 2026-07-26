@@ -1,0 +1,201 @@
+% ============================================================
+%  CHAPTER 3 — SOFTWARE REQUIREMENTS SPECIFICATION (SRS)
+% ============================================================
+\chapter{Software Requirements Specification}
+
+
+\section{Overall Description}
+
+\subsection{Product Perspective}
+
+MindTrace is a standalone web-based application that integrates a deep
+learning inference backend with a browser-based frontend. It does not depend
+on third-party emotion analysis APIs; all inference is performed by the
+custom-trained ResNet-18 model hosted on the cloud. The system interacts with
+a MongoDB database for data persistence and with the client's webcam for
+real-time frame capture.
+
+\subsection{Product Functions}
+
+\begin{itemize}
+    \item Real-time facial emotion classification into seven categories.
+    \item Head pose estimation to detect attention direction.
+    \item Blink-rate measurement for fatigue detection.
+    \item Composite engagement score computation (0--100 scale).
+    \item Session-wise logging of emotion and engagement data.
+    \item Interactive analytics dashboard with charts and timelines.
+    \item Role-based user management (student and administrator roles).
+    \item Secure user authentication with JWT and bcrypt.
+\end{itemize}
+
+\subsection{User Classes and Characteristics}
+
+\begin{itemize}
+    \item \textbf{Students / Employees}: Use the system during sessions to
+          have their engagement monitored. They can view their own session
+          history and emotion analytics through the dashboard.
+    \item \textbf{Administrators / Instructors}: Have elevated access to
+          view aggregated engagement reports for all users under their
+          purview and manage user accounts.
+\end{itemize}
+
+\subsection{Operating Environment}
+
+The system operates in the following environment:
+\begin{itemize}
+    \item \textbf{Backend}: Python 3.10+, FastAPI, deployed on Hugging Face
+          Spaces (Linux container).
+    \item \textbf{Database}: MongoDB Atlas (cloud-hosted).
+    \item \textbf{Frontend}: React + Vite, deployed on Vercel.
+    \item \textbf{Client}: Any modern web browser (Chrome, Firefox, Edge)
+          with webcam access.
+\end{itemize}
+
+\section{Functional Requirements}
+
+\subsection{User Authentication}
+\begin{itemize}
+    \item The system shall allow users to register with a username, email,
+          password, and role.
+    \item Passwords shall be hashed using bcrypt before storage.
+    \item On login, the system shall issue a signed JWT token valid for a
+          configurable duration.
+    \item Protected endpoints shall reject requests with invalid or expired
+          tokens with an HTTP 401 response.
+\end{itemize}
+
+\subsection{Emotion Detection}
+\begin{itemize}
+    \item The system shall accept a Base64-encoded webcam frame via a REST
+          endpoint.
+    \item It shall detect faces using MediaPipe Face Mesh and extract the
+          face region with padding.
+    \item The extracted face region shall be classified by the ResNet-18
+          model into one of seven emotional states.
+    \item The API response shall include the detected emotion label and its
+          confidence score.
+\end{itemize}
+
+\subsection{Engagement Scoring}
+\begin{itemize}
+    \item The system shall estimate head pose (pitch, yaw, roll) using a
+          3D-2D point correspondence (PnP) solver.
+    \item It shall calculate blink rate from eye-aspect-ratio landmarks.
+    \item A composite engagement score shall be computed by combining
+          emotion weight, head pose deviation, and blink frequency.
+    \item The score shall be updated and returned with each API call.
+\end{itemize}
+
+\subsection{Session Management}
+\begin{itemize}
+    \item The system shall persist each session's start time, end time,
+          per-frame emotion logs, and computed engagement scores in MongoDB.
+    \item Users shall be able to retrieve a history of their past sessions.
+    \item Administrators shall be able to view session data for all users.
+\end{itemize}
+
+\subsection{Analytics Dashboard}
+\begin{itemize}
+    \item The frontend shall display a live emotion label and engagement
+          score overlay on the webcam feed.
+    \item It shall render a timeline chart of engagement scores for the
+          current session.
+    \item Emotion distribution shall be shown as a pie/bar chart.
+    \item Session history shall be accessible in a paginated table view.
+\end{itemize}
+
+\section{Non-Functional Requirements}
+
+\subsection{Performance}
+\begin{itemize}
+    \item The system shall process a single webcam frame (inference +
+          engagement scoring) within \textbf{300 ms} under normal load.
+    \item The frontend shall update the emotion overlay at a minimum of
+          \textbf{5 frames per second}.
+\end{itemize}
+
+\subsection{Scalability}
+\begin{itemize}
+    \item The stateless backend design shall allow horizontal scaling by
+          deploying multiple FastAPI instances behind a load balancer.
+    \item MongoDB Atlas shall support automatic scaling of storage.
+\end{itemize}
+
+\subsection{Security}
+\begin{itemize}
+    \item All API communication shall occur over HTTPS.
+    \item JWT tokens shall use HS256 signing and include an expiry claim.
+    \item User passwords shall never be stored in plain text.
+\end{itemize}
+
+\subsection{Usability}
+\begin{itemize}
+    \item The user interface shall be operable without installation of any
+          additional software or browser extensions.
+    \item The dashboard shall be responsive and usable on screen widths
+          from 768 px (tablet) upwards.
+\end{itemize}
+
+\subsection{Reliability}
+\begin{itemize}
+    \item The system shall gracefully handle frames in which no face is
+          detected, returning a neutral engagement state without crashing.
+    \item The frontend shall display a user-friendly error message if the
+          backend is unreachable.
+\end{itemize}
+
+\section{System Requirements}
+
+\subsection{Hardware Requirements}
+
+\begin{table}[H]
+\centering
+\caption{Hardware Requirements}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Minimum Specification} \\
+\midrule
+Processor       & Intel Core i5 / AMD Ryzen 5 (or equivalent) \\
+RAM             & 8 GB \\
+Webcam          & 720p USB or built-in camera \\
+Network         & Broadband internet connection (5 Mbps+) \\
+Storage (client)& 500 MB free disk space (browser cache) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Software Requirements}
+
+\begin{table}[H]
+\centering
+\caption{Software Requirements}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component}      & \textbf{Version / Details} \\
+\midrule
+Python                  & 3.10 or higher \\
+PyTorch                 & 2.x (with torchvision) \\
+FastAPI                 & 0.110+ \\
+MediaPipe               & 0.10+ \\
+OpenCV                  & 4.x \\
+MongoDB                 & Atlas cloud (or local 6.x) \\
+React                   & 18.x \\
+Node.js                 & 18 LTS \\
+Web Browser             & Chrome 110+ / Firefox 110+ / Edge 110+ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Constraints and Assumptions}
+
+\begin{itemize}
+    \item The system assumes adequate and consistent lighting for reliable
+          face detection. Poor lighting may reduce model accuracy.
+    \item The ResNet-18 model is trained exclusively on the RAF-DB dataset;
+          performance may vary for demographics underrepresented in that
+          dataset.
+    \item Browser webcam access requires the user to grant camera
+          permissions; denial will prevent system operation.
+    \item Latency is subject to network conditions between the client and
+          the cloud-hosted backend.
+\end{itemize}

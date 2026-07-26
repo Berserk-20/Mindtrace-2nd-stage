@@ -1,0 +1,243 @@
+% ============================================================
+%  CHAPTER 6 — IMPLEMENTATION
+% ============================================================
+\chapter{Project Implementation}
+
+
+\section{Deep Learning Model Training}
+
+\subsection{Dataset Preparation}
+
+The \textbf{RAF-DB (Real-world Affective Faces Database)} dataset was used to
+train the emotion recognition model. It contains 15,339 facial images
+annotated with seven basic emotion categories: Angry, Disgust, Fear, Happy,
+Neutral, Sad, and Surprise. The dataset was split into 12,271 training images
+and 3,068 test images following the official partition.
+
+Preprocessing steps applied to each image:
+\begin{itemize}
+    \item Resize to $224 \times 224$ pixels (ResNet-18 input size).
+    \item Random horizontal flip (probability 0.5) for data augmentation.
+    \item Random rotation in the range $[-10°, +10°]$.
+    \item Colour jitter (brightness, contrast, saturation variation of 0.2).
+    \item Normalisation using ImageNet mean $[0.485, 0.456, 0.406]$ and
+          standard deviation $[0.229, 0.224, 0.225]$.
+\end{itemize}
+
+Class imbalance in the dataset (Disgust and Fear are underrepresented) was
+addressed using \textbf{weighted random sampling} during training, where the
+sampling weight of each class is inversely proportional to its frequency.
+
+\subsection{Model Architecture}
+
+\textbf{ResNet-18} (Residual Network with 18 layers) was selected as the
+base architecture. It was pretrained on ImageNet and fine-tuned for the
+7-class emotion classification task. The key modification was replacing the
+final fully-connected layer (originally 1000 output units for ImageNet) with
+a new linear layer of 7 output units:
+
+\begin{itemize}
+    \item \textbf{Input}: $3 \times 224 \times 224$ RGB image tensor
+    \item \textbf{Feature Extractor}: ResNet-18 convolutional backbone
+          (frozen for first 3 epochs, then fully fine-tuned)
+    \item \textbf{Classifier Head}: Linear(512, 7) + Softmax
+\end{itemize}
+
+\subsection{Training Configuration}
+
+\begin{table}[H]
+\centering
+\caption{Model Training Hyperparameters}
+\begin{tabular}{ll}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+Optimiser               & Adam \\
+Initial learning rate   & $1 \times 10^{-3}$ \\
+LR scheduler            & StepLR (step size = 10, gamma = 0.1) \\
+Batch size              & 64 \\
+Epochs                  & 30 \\
+Loss function           & CrossEntropyLoss \\
+Weight decay            & $1 \times 10^{-4}$ \\
+Early stopping patience & 5 epochs \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Training was performed on a GPU-accelerated environment (NVIDIA CUDA).
+The best model checkpoint (highest validation accuracy) was saved and
+exported as a \texttt{.pth} file for deployment.
+
+\subsection{Model Performance}
+
+The trained ResNet-18 model achieved the following results on the RAF-DB test set:
+
+\begin{table}[H]
+\centering
+\caption{Model Evaluation Results on RAF-DB Test Set}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Emotion}  & \textbf{Precision} & \textbf{Recall} \\
+\midrule
+Angry             & 0.81               & 0.78 \\
+Disgust           & 0.74               & 0.70 \\
+Fear              & 0.76               & 0.73 \\
+Happy             & 0.93               & 0.95 \\
+Neutral           & 0.88               & 0.89 \\
+Sad               & 0.82               & 0.80 \\
+Surprise          & 0.87               & 0.86 \\
+\midrule
+\textbf{Overall Accuracy} & \multicolumn{2}{c}{\textbf{85.7\%}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Backend Implementation}
+
+\subsection{Project Structure}
+
+The FastAPI backend is organised as follows:
+
+\begin{itemize}
+    \item \texttt{main.py} — FastAPI application entry point; registers
+          routers and CORS middleware.
+    \item \texttt{routers/auth.py} — Authentication endpoints
+          (\texttt{/register}, \texttt{/login}).
+    \item \texttt{routers/analysis.py} — Inference endpoint
+          (\texttt{/api/analyze}) and session management.
+    \item \texttt{services/emotion\_service.py} — MediaPipe and
+          ResNet-18 inference logic.
+    \item \texttt{services/engagement\_service.py} — Head pose and
+          blink-rate computation.
+    \item \texttt{services/db\_service.py} — Async MongoDB operations.
+    \item \texttt{models/schemas.py} — Pydantic request/response models.
+    \item \texttt{core/security.py} — JWT and bcrypt utilities.
+\end{itemize}
+
+\subsection{Emotion Inference Endpoint}
+
+The core inference endpoint accepts a Base64-encoded image frame and returns
+the emotion prediction and engagement metrics:
+
+\begin{enumerate}
+    \item The Base64 payload is decoded to a NumPy array using OpenCV.
+    \item MediaPipe Face Mesh processes the frame to extract 468 facial
+          landmarks and compute a face bounding box.
+    \item The face region is cropped, resized to $224 \times 224$, and
+          normalised before being passed to the ResNet-18 model.
+    \item The model returns a softmax probability vector; the argmax class
+          is selected as the predicted emotion.
+    \item In parallel, head pose is estimated from 6 key landmarks using
+          \texttt{cv2.solvePnP}, and blink rate is computed from the
+          Eye Aspect Ratio (EAR) of both eyes.
+    \item The composite engagement score is computed and the full result is
+          serialised as a JSON response.
+\end{enumerate}
+
+\subsection{Authentication Implementation}
+
+User registration stores the bcrypt-hashed password (work factor 12) in
+MongoDB. Login verifies the password hash and issues a signed JWT token with
+a configurable expiry (default: 60 minutes). All protected API routes use
+a FastAPI dependency (\texttt{get\_current\_user}) that decodes and validates
+the token before passing the user context to the handler.
+
+\subsection{CORS and Deployment Configuration}
+
+Cross-Origin Resource Sharing (CORS) middleware is configured to allow
+requests from the Vercel-hosted frontend domain. The application is
+containerised using Docker with a \texttt{uvicorn} ASGI server and deployed
+to Hugging Face Spaces via a \texttt{Dockerfile} that installs all Python
+dependencies and copies the trained model weights.
+
+\section{Frontend Implementation}
+
+\subsection{Project Structure}
+
+The React + Vite frontend is structured using a feature-based layout:
+
+\begin{itemize}
+    \item \texttt{src/pages/} — Top-level page components (Login, Register,
+          Dashboard, History, Admin).
+    \item \texttt{src/components/} — Reusable UI components (WebcamFeed,
+          EmotionOverlay, EngagementChart, SessionTable).
+    \item \texttt{src/services/api.js} — Axios instance with JWT
+          interceptor for attaching the Bearer token to every request.
+    \item \texttt{src/store/} — Global state management using React Context
+          for authentication and session state.
+    \item \texttt{src/hooks/} — Custom hooks (\texttt{useWebcam},
+          \texttt{useAnalysis}) for webcam access and API polling.
+\end{itemize}
+
+\subsection{Webcam Capture Module}
+
+The \texttt{useWebcam} hook uses the \texttt{navigator.mediaDevices.getUserMedia}
+Web API to access the camera stream. Frames are captured at a configurable
+interval (200 ms default) by drawing the video stream onto a hidden
+\texttt{<canvas>} element and calling \texttt{canvas.toDataURL('image/jpeg', 0.7)}
+to produce a compressed Base64 string for transmission.
+
+\subsection{Live Dashboard}
+
+The main dashboard renders:
+\begin{itemize}
+    \item A live webcam feed with the detected emotion label and confidence
+          overlaid as a transparent badge.
+    \item An engagement score gauge updated in real time.
+    \item A Recharts \texttt{LineChart} plotting engagement score over the
+          session timeline.
+    \item A \texttt{PieChart} showing the distribution of detected emotions
+          for the current session.
+\end{itemize}
+
+Session start/stop controls trigger API calls to create and finalise session
+records in MongoDB.
+
+\section{Database Integration}
+
+The backend uses \textbf{Motor}, the asynchronous Python driver for MongoDB,
+to perform non-blocking database operations. A connection pool is initialised
+at application startup and shared across all request handlers via FastAPI's
+dependency injection system. Key operations include:
+
+\begin{itemize}
+    \item \textbf{User creation}: Insert a new document into the
+          \texttt{users} collection on registration.
+    \item \textbf{Session creation}: Insert a new session document on
+          session start.
+    \item \textbf{Frame append}: Use MongoDB's \texttt{\$push} operator to
+          append each frame analysis record to the session's \texttt{frames}
+          array atomically.
+    \item \textbf{Session finalisation}: Update \texttt{end\_time},
+          \texttt{avg\_engagement}, and \texttt{dominant\_emotion} on
+          session end.
+    \item \textbf{History retrieval}: Query sessions by \texttt{user\_id}
+          with pagination using \texttt{skip} and \texttt{limit}.
+\end{itemize}
+
+\section{Deployment}
+
+\subsection{Backend Deployment — Hugging Face Spaces}
+
+The FastAPI backend is deployed as a Docker Space on Hugging Face. The
+\texttt{Dockerfile} performs the following steps:
+
+\begin{enumerate}
+    \item Uses \texttt{python:3.10-slim} as the base image.
+    \item Installs system dependencies (libGL for OpenCV).
+    \item Copies and installs Python packages from \texttt{requirements.txt}.
+    \item Copies the application source and pre-trained model weights.
+    \item Exposes port 7860 and starts the Uvicorn server.
+\end{enumerate}
+
+Environment variables (MongoDB URI, JWT secret key) are configured through
+the Hugging Face Spaces secrets interface to avoid hardcoding sensitive
+credentials.
+
+\subsection{Frontend Deployment — Vercel}
+
+The React application is deployed on Vercel by connecting the GitHub
+repository. Vercel automatically builds the Vite project on each push to the
+main branch using the command \texttt{npm run build}. The backend API URL is
+configured as a Vercel environment variable (\texttt{VITE\_API\_URL}) and
+injected at build time.

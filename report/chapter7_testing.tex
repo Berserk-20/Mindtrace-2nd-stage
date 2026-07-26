@@ -1,0 +1,242 @@
+% ============================================================
+%  CHAPTER 7 — TESTING
+% ============================================================
+\chapter{Testing}
+
+
+\section{Testing Strategy}
+
+The testing approach for MindTrace followed a \textbf{bottom-up} strategy:
+
+\begin{enumerate}
+    \item \textbf{Unit Testing} — Individual functions and modules were
+          tested in isolation to verify correct behaviour.
+    \item \textbf{Integration Testing} — Interactions between modules
+          (e.g., frontend-to-API, API-to-database) were verified.
+    \item \textbf{System Testing} — The complete end-to-end system was
+          tested against the requirements defined in the SRS.
+    \item \textbf{Performance Testing} — Latency and throughput were
+          measured under simulated load.
+    \item \textbf{User Acceptance Testing (UAT)} — The system was
+          evaluated by end users to validate usability and correctness.
+\end{enumerate}
+
+\section{Unit Testing}
+
+\subsection{Emotion Service}
+
+\begin{table}[H]
+\centering
+\caption{Unit Test Cases — Emotion Service}
+\begin{tabular}{p{0.3\textwidth} p{0.3\textwidth} p{0.25\textwidth} l}
+\toprule
+\textbf{Test Case}          & \textbf{Input}             & \textbf{Expected Output}    & \textbf{Result} \\
+\midrule
+Valid face frame inference  & 224×224 frontal face image & Emotion label + confidence  & Pass \\
+No face in frame            & Blank/background image     & \texttt{null} emotion, score = 50 & Pass \\
+Multiple faces in frame     & Image with 2 faces         & Primary face detected       & Pass \\
+Corrupt / malformed image   & Invalid Base64 string      & HTTP 400 error response     & Pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Engagement Service}
+
+\begin{table}[H]
+\centering
+\caption{Unit Test Cases — Engagement Service}
+\begin{tabular}{p{0.3\textwidth} p{0.3\textwidth} p{0.25\textwidth} l}
+\toprule
+\textbf{Test Case}          & \textbf{Input}                  & \textbf{Expected Output}  & \textbf{Result} \\
+\midrule
+Front-facing head pose      & Yaw = 0°, Pitch = 0°            & High pose score ($>$80)   & Pass \\
+Side-facing head pose       & Yaw = 30°                       & Low pose score ($<$40)    & Pass \\
+Normal blink rate           & EAR oscillation pattern         & Normal blink score        & Pass \\
+Engagement score range      & Any emotion + pose              & Score in [0, 100]         & Pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Authentication Service}
+
+\begin{table}[H]
+\centering
+\caption{Unit Test Cases — Authentication Service}
+\begin{tabular}{p{0.3\textwidth} p{0.3\textwidth} p{0.25\textwidth} l}
+\toprule
+\textbf{Test Case}          & \textbf{Input}             & \textbf{Expected Output}    & \textbf{Result} \\
+\midrule
+Valid user registration     & New username, email, password & User document created     & Pass \\
+Duplicate email registration & Existing email             & HTTP 409 Conflict           & Pass \\
+Valid login                 & Correct credentials        & JWT token returned          & Pass \\
+Invalid password login      & Wrong password             & HTTP 401 Unauthorized       & Pass \\
+Expired token access        & Expired JWT                & HTTP 401 Unauthorized       & Pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Integration Testing}
+
+\subsection{Frontend to Backend Integration}
+
+Integration tests verified that the React frontend correctly communicates
+with the FastAPI backend under real network conditions.
+
+\begin{table}[H]
+\centering
+\caption{Integration Test Cases — Frontend to Backend}
+\begin{tabular}{p{0.35\textwidth} p{0.35\textwidth} l}
+\toprule
+\textbf{Scenario}                           & \textbf{Expected Behaviour}         & \textbf{Result} \\
+\midrule
+Login from frontend                         & JWT stored in localStorage          & Pass \\
+Webcam frame sent to \texttt{/api/analyze}  & Emotion + score displayed in UI     & Pass \\
+Session start API call                      & Session document created in MongoDB & Pass \\
+Session end API call                        & Session summary updated in MongoDB  & Pass \\
+Unauthenticated API call                    & Redirect to login page              & Pass \\
+Backend unreachable                         & Error toast displayed to user       & Pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Backend to Database Integration}
+
+\begin{table}[H]
+\centering
+\caption{Integration Test Cases — Backend to MongoDB}
+\begin{tabular}{p{0.35\textwidth} p{0.35\textwidth} l}
+\toprule
+\textbf{Scenario}                     & \textbf{Expected Behaviour}         & \textbf{Result} \\
+\midrule
+User document insert                  & Document found in users collection  & Pass \\
+Session document insert               & Document found in sessions collection & Pass \\
+Frame \$push to session               & Frame appended to frames array      & Pass \\
+Session history query by user ID      & Correct sessions returned           & Pass \\
+Pagination (skip / limit)             & Correct subset of sessions returned & Pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{System Testing}
+
+System testing validated end-to-end user flows against the functional
+requirements specified in the SRS.
+
+\begin{table}[H]
+\centering
+\caption{System Test Cases — End-to-End Flows}
+\begin{tabular}{p{0.3\textwidth} p{0.3\textwidth} p{0.25\textwidth} l}
+\toprule
+\textbf{Test Scenario}          & \textbf{Steps}                      & \textbf{Expected Result}  & \textbf{Result} \\
+\midrule
+New user registration and login & Register $\to$ Login $\to$ Dashboard & Dashboard renders correctly & Pass \\
+Live emotion monitoring         & Start session $\to$ face webcam      & Emotion label updates live  & Pass \\
+Engagement score tracking       & Perform focus/distraction actions    & Score reflects state changes & Pass \\
+Session history view            & End session $\to$ view History       & Past session visible in table & Pass \\
+Admin multi-user view           & Login as admin $\to$ Admin panel     & All user sessions visible   & Pass \\
+Role-based access control       & Student accesses admin route         & Access denied (403)         & Pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Performance Testing}
+
+Performance tests were conducted to measure system responsiveness under
+realistic usage conditions.
+
+\subsection{API Latency}
+
+Latency was measured for the \texttt{/api/analyze} endpoint by sending
+100 sequential requests with a standard 224×224 face image:
+
+\begin{table}[H]
+\centering
+\caption{API Latency Measurements}
+\begin{tabular}{ll}
+\toprule
+\textbf{Metric}           & \textbf{Value} \\
+\midrule
+Mean response time        & 187 ms \\
+Median response time      & 172 ms \\
+95th percentile latency   & 264 ms \\
+Maximum response time     & 312 ms \\
+Throughput                & 5.3 requests/second \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All measurements were within the 300 ms performance requirement defined in
+the SRS. The system supports the target minimum update rate of 5 frames
+per second for the live dashboard.
+
+\subsection{Cross-Browser Compatibility}
+
+The frontend was tested across major browsers to ensure consistent behaviour:
+
+\begin{table}[H]
+\centering
+\caption{Cross-Browser Compatibility Results}
+\begin{tabular}{lll}
+\toprule
+\textbf{Browser}     & \textbf{Version} & \textbf{Result} \\
+\midrule
+Google Chrome        & 122              & Pass \\
+Mozilla Firefox      & 123              & Pass \\
+Microsoft Edge       & 122              & Pass \\
+Safari (macOS)       & 17               & Pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{User Acceptance Testing}
+
+User Acceptance Testing (UAT) was conducted with a small group of five
+student volunteers who interacted with the deployed MindTrace system for a
+15-minute session each. Participants were asked to rate the system on a
+scale of 1 (poor) to 5 (excellent) across four criteria:
+
+\begin{table}[H]
+\centering
+\caption{User Acceptance Testing Results}
+\begin{tabular}{lc}
+\toprule
+\textbf{Criterion}                        & \textbf{Average Score (out of 5)} \\
+\midrule
+Ease of use and interface clarity         & 4.4 \\
+Accuracy of detected emotions             & 4.0 \\
+Responsiveness of the live dashboard      & 4.2 \\
+Overall system usefulness                 & 4.3 \\
+\midrule
+\textbf{Overall Average}                  & \textbf{4.2} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Key feedback collected from participants:
+\begin{itemize}
+    \item The live emotion overlay was intuitive and easy to understand.
+    \item Emotion detection accuracy was perceived as reliable under
+          good lighting conditions.
+    \item Some users noted occasional misclassification between
+          \textit{Neutral} and \textit{Sad} expressions.
+    \item The session history view was considered a useful feature for
+          self-review.
+\end{itemize}
+
+\section{Defects and Resolutions}
+
+\begin{table}[H]
+\centering
+\caption{Defects Identified and Resolved During Testing}
+\begin{tabular}{p{4cm} p{4cm} l}
+\toprule
+\textbf{Defect}                            & \textbf{Resolution}                        & \textbf{Status} \\
+\midrule
+No face detected — system crashes          & Added null check before inference call     & Resolved \\
+JWT token not refreshed on expiry          & Added 401 interceptor in Axios             & Resolved \\
+Engagement score exceeds 100 in edge case  & Added clamp(0, 100) to score formula       & Resolved \\
+MongoDB connection timeout under load      & Configured connection pooling (max=10)     & Resolved \\
+CORS error on cross-origin frame request   & Whitelisted Vercel domain in CORS config   & Resolved \\
+\bottomrule
+\end{tabular}
+\end{table}

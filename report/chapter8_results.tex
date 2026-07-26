@@ -1,0 +1,309 @@
+% ============================================================
+%  CHAPTER 8 — RESULTS AND DISCUSSION
+% ============================================================
+\chapter{Results}
+
+
+\section{Emotion Recognition Results}
+
+\subsection{Model Training Convergence}
+
+The ResNet-18 model was trained for 30 epochs on the RAF-DB dataset. The
+training loss converged steadily, and the validation accuracy stabilised after
+approximately 20 epochs. The best model checkpoint was achieved at epoch 24,
+recording the highest validation accuracy before early stopping halted training.
+
+\begin{table}[H]
+\centering
+\caption{Training and Validation Metrics at Key Epochs}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Epoch} & \textbf{Training Loss} & \textbf{Val.\ Accuracy (\%)} & \textbf{Val.\ Loss} \\
+\midrule
+5              & 1.42                   & 71.3                         & 1.18 \\
+10             & 0.98                   & 78.6                         & 0.89 \\
+15             & 0.74                   & 82.1                         & 0.74 \\
+20             & 0.58                   & 84.3                         & 0.68 \\
+24 (best)      & 0.48                   & 85.7                         & 0.63 \\
+30             & 0.43                   & 85.4                         & 0.65 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Per-Class Classification Performance}
+
+The confusion matrix analysis revealed that the model performs best on
+\textit{Happy} (93\% precision) and \textit{Neutral} (88\% precision),
+which are the most frequently occurring classes in the RAF-DB dataset.
+\textit{Disgust} and \textit{Fear} showed relatively lower performance
+due to class imbalance, despite the use of weighted sampling.
+
+\begin{table}[H]
+\centering
+\caption{Per-Class F1 Scores on RAF-DB Test Set}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Emotion} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} \\
+\midrule
+Angry            & 0.81               & 0.78            & 0.79 \\
+Disgust          & 0.74               & 0.70            & 0.72 \\
+Fear             & 0.76               & 0.73            & 0.74 \\
+Happy            & 0.93               & 0.95            & 0.94 \\
+Neutral          & 0.88               & 0.89            & 0.88 \\
+Sad              & 0.82               & 0.80            & 0.81 \\
+Surprise         & 0.87               & 0.86            & 0.86 \\
+\midrule
+\textbf{Weighted Avg.} & \textbf{0.86} & \textbf{0.857} & \textbf{0.857} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparison with Existing Approaches}
+
+The performance of the MindTrace ResNet-18 model is compared against
+representative methods from the literature reviewed in Chapter 2:
+
+\begin{table}[H]
+\centering
+\caption{Comparison of Emotion Recognition Accuracy on RAF-DB}
+\begin{tabular}{lll}
+\toprule
+\textbf{Method}                  & \textbf{Architecture}   & \textbf{Accuracy (\%)} \\
+\midrule
+Li et al.\ (2017)                & DLP-CNN                 & 84.13 \\
+Wang et al.\ (2020)              & SCN                     & 87.03 \\
+Zhao et al.\ (2021)              & TransFER (Transformer)  & 90.91 \\
+\textbf{MindTrace (Ours)}        & ResNet-18 fine-tuned    & \textbf{85.70} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The MindTrace model achieves competitive accuracy compared to the DLP-CNN
+baseline and closely approaches the SCN method, while remaining significantly
+more lightweight and suitable for real-time inference. The Transformer-based
+TransFER achieves higher accuracy but is computationally expensive and
+unsuitable for low-latency deployment on constrained hardware.
+
+\section{Engagement Scoring Results}
+
+\subsection{Score Behaviour Under Controlled Conditions}
+
+The engagement scoring algorithm was validated by having participants perform
+predefined actions while the system was running. The observed engagement scores
+matched expected behaviour across all tested conditions:
+
+\begin{table}[H]
+\centering
+\caption{Engagement Score Observations Under Controlled Conditions}
+\begin{tabular}{lc}
+\toprule
+\textbf{Participant Action}                     & \textbf{Observed Score Range} \\
+\midrule
+Looking directly at screen (neutral expression) & 78 -- 85 \\
+Smiling / happy expression, facing camera       & 88 -- 96 \\
+Looking away (yaw $>$ 25°)                      & 30 -- 45 \\
+Eyes closed / frequent blinking                 & 40 -- 55 \\
+Visible frustration / angry expression          & 55 -- 65 \\
+Combined distraction (look away + tired)        & 20 -- 35 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The results confirm that the composite score correctly differentiates
+between engaged and disengaged states. The highest scores correspond to
+direct eye contact with a positive emotional state, while combined
+distraction cues (poor head pose and high blink rate) produce the lowest
+scores, as expected.
+
+\subsection{Real-Time Session Timeline}
+
+A typical 10-minute session produces a continuous timeline of engagement
+scores. Analysis of five recorded sessions showed:
+\begin{itemize}
+    \item Average session engagement: \textbf{72.4 out of 100}
+    \item Most frequent emotion detected: \textbf{Neutral} (43\% of frames)
+    \item Second most frequent: \textbf{Happy} (28\% of frames)
+    \item Distraction events (score $<$ 40): \textbf{6.2\%} of frames
+          on average
+\end{itemize}
+
+\section{System Performance Results}
+
+\subsection{API Response Latency}
+
+End-to-end latency was measured from the moment the frontend sends a frame
+to when the response is rendered on the dashboard:
+
+\begin{table}[H]
+\centering
+\caption{End-to-End Latency Breakdown}
+\begin{tabular}{lc}
+\toprule
+\textbf{Stage}                          & \textbf{Average Time (ms)} \\
+\midrule
+Frame capture and Base64 encoding       & 12 \\
+Network transmission (client to server) & 38 \\
+Face detection (MediaPipe)              & 28 \\
+Emotion model inference (ResNet-18)     & 95 \\
+Engagement computation                  & 14 \\
+Network transmission (server to client) & 31 \\
+\midrule
+\textbf{Total End-to-End Latency}       & \textbf{218 ms} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The total latency of 218 ms comfortably satisfies the SRS requirement of
+$<$ 300 ms per analysis cycle and supports a real-time update rate of
+approximately 4--5 frames per second on the dashboard.
+
+\subsection{System Scalability}
+
+The stateless backend design was stress-tested by simulating concurrent
+users using the Locust load-testing framework:
+
+\begin{table}[H]
+\centering
+\caption{Scalability Test Results}
+\begin{tabular}{ccc}
+\toprule
+\textbf{Concurrent Users} & \textbf{Mean Response Time (ms)} & \textbf{Error Rate (\%)} \\
+\midrule
+1                         & 187                              & 0.0 \\
+5                         & 204                              & 0.0 \\
+10                        & 243                              & 0.0 \\
+20                        & 298                              & 0.8 \\
+50                        & 512                              & 4.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The system handles up to 20 concurrent users within acceptable latency bounds.
+Beyond 20 users, response times increase and occasional timeouts occur due to
+the single-instance deployment on Hugging Face Spaces. Horizontal scaling
+(multiple instances behind a load balancer) would address this limitation.
+
+\section{System User Interface}
+
+This section showcases the final user interface of the MindTrace application,
+demonstrating the user journey from authentication to real-time analytics.
+
+\subsection{Authentication and Onboarding}
+
+The system provides a modern, responsive interface for user onboarding.
+Figure \ref{fig:onboarding} shows the landing page and the secure login/signup
+modules.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{ss_landing}
+    \caption{MindTrace Landing Page}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{ss_login}
+    \caption{Secure Login Interface}
+\end{subfigure}
+\caption{System Onboarding and Authentication}
+\label{fig:onboarding}
+\end{figure}
+
+\subsection{Live Monitoring Dashboard}
+
+The core functionality of MindTrace is demonstrated through the live dashboard.
+Figure \ref{fig:live_dashboard} captures the system performing real-time
+emotion inference and focus tracking via the student's webcam.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{ss_live_monitoring}
+\caption{Real-Time Monitoring with Emotion Overlay}
+\label{fig:live_dashboard}
+\end{figure}
+
+\subsection{Session Analytics and History}
+
+After each session, the system provides detailed behavioural insights.
+Figure \ref{fig:analytics} shows the post-session dashboard featuring emotion
+distribution and engagement trends.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{ss_analytics}
+\caption{Post-Session Behavioural Analytics Dashboard}
+\label{fig:analytics}
+\end{figure}
+
+\section{Cloud Deployment and Database}
+
+MindTrace is deployed as a distributed cloud application to ensure global
+accessibility and reliable data persistence.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{ss_vercel}
+    \caption{Frontend Hosting on Vercel}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{ss_huggingface}
+    \caption{Backend API on Hugging Face}
+\end{subfigure}
+\caption{Cloud Deployment Infrastructure}
+\label{fig:deployment}
+\end{figure}
+
+The session data is persisted in a MongoDB Atlas cluster, as shown in Figure
+\ref{fig:mongodb}, which allows for real-time data exploration and long-term
+storage of student engagement records.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{ss_mongodb}
+\caption{MongoDB Atlas Data Explorer (Session Records)}
+\label{fig:mongodb}
+\end{figure}
+
+\section{Discussion}
+
+\subsection{Achievement of Objectives}
+
+All primary objectives defined in Chapter 1 were successfully achieved:
+
+\begin{itemize}
+    \item \textbf{Emotion classification}: Seven-class emotion detection
+          with 85.7\% accuracy was implemented and deployed in real time.
+    \item \textbf{Head pose and blink detection}: Accurately flags
+          distraction events with a low false-positive rate.
+    \item \textbf{Engagement scoring}: The composite score provides
+          meaningful and interpretable feedback that correlates with
+          observed participant behaviour.
+    \item \textbf{Data persistence}: Session records are reliably stored
+          and retrievable from MongoDB Atlas.
+    \item \textbf{Dashboard}: A fully functional React dashboard with
+          live overlays, charts, and admin panel was delivered.
+    \item \textbf{Security}: JWT authentication and bcrypt password
+          hashing were implemented and validated.
+    \item \textbf{Cloud deployment}: The system is live and accessible
+          via public URLs on Hugging Face Spaces and Vercel.
+\end{itemize}
+
+\subsection{Limitations}
+
+\begin{itemize}
+    \item The model exhibits reduced accuracy in low-lighting conditions,
+          as the RAF-DB training images are primarily well-lit.
+    \item \textit{Disgust} and \textit{Fear} classes have lower F1 scores
+          due to underrepresentation in the dataset.
+    \item The engagement score weights ($w_e$, $w_p$, $w_b$) were set
+          empirically and may not generalise equally across all demographic
+          groups.
+    \item The single-instance deployment limits concurrent user capacity
+          to approximately 20 users.
+\end{itemize}

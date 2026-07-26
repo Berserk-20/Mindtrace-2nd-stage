@@ -1,0 +1,34 @@
+classDiagram
+    class User {
+        +ObjectId id
+        +String username
+        +String email
+        +String hashed_password
+        +String role
+        +register()
+        +login()
+    }
+    
+    class Session {
+        +ObjectId session_id
+        +ObjectId user_id
+        +DateTime start_time
+        +DateTime end_time
+        +Float avg_engagement
+        +String dominant_emotion
+        +start()
+        +end()
+        +appendFrame()
+    }
+    
+    class EmotionDetector {
+        +String model_path
+        +String device
+        +detectFace()
+        +classifyEmotion()
+        +preprocess()
+        +computeEngagement()
+    }
+
+    User "1" --> "N" Session : "has"
+    Session "1" --> "1" EmotionDetector : "uses"

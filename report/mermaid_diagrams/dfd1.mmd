@@ -1,0 +1,9 @@
+graph TD
+    C[Camera / Video] -- "send frame" --> FD((Face Detection))
+    FD -- "send face ROI" --> ER((Emotion Inference))
+    ER -- "returns emotion" --> SC((Engagement Scoring))
+    SC -- "returns score" --> DB((Database))
+    C -- "credentials" --> Auth((Authentication))
+    Auth -- "user data" --> DB
+    DB -- "retrieve report" --> Admin[Admin Dashboard]
+    DB -- "retrieve session" --> User[User]

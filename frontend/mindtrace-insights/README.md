@@ -1,73 +1,69 @@
-# Welcome to your Lovable project
+# 🧠 MindTrace Insights (Frontend)
 
-## Project info
+Welcome to the **MindTrace Frontend**! This repository contains the interactive user interface for the MindTrace platform, an advanced real-time emotion and engagement tracking system.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Built with performance and aesthetics in mind, this frontend consumes the MindTrace FastAPI backend to visualize user engagement metrics, live webcam feeds, and historical data beautifully.
 
-## How can I edit this code?
+## ✨ Features
 
-There are several ways of editing your application.
+- **Live Session Dashboard:** View real-time emotion tracking and focus scores dynamically.
+- **Interactive Charts:** Beautiful data visualization using Recharts to display engagement trends.
+- **Webcam Integration:** Seamlessly capture and stream frames to the backend for analysis.
+- **Modern UI:** Built with Tailwind CSS and shadcn/ui for a premium, accessible, and responsive design.
+- **Authentication:** Clean and secure login/signup flows.
 
-**Use Lovable**
+## 🛠️ Technology Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Framework:** [React 18](https://react.dev/) + [Vite](https://vitejs.dev/) - For lightning-fast development and optimized builds.
+- **Language:** [TypeScript](https://www.typescriptlang.org/) - Ensuring type safety and better developer experience.
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework for rapid UI development.
+- **Components:** [shadcn/ui](https://ui.shadcn.com/) - Beautifully designed, accessible, and customizable components.
+- **Charts:** [Recharts](https://recharts.org/) - Composable charting library built on React components.
+- **Data Fetching:** [React Query (@tanstack/react-query)](https://tanstack.com/query/latest) - For powerful asynchronous state management.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 💻 Local Development Setup
 
-**Use your preferred IDE**
+Follow these steps to get the frontend running locally on your machine.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- npm or yarn
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. **Navigate to the frontend directory:**
+   ```bash
+   cd frontend/mindtrace-insights
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Configure Environment:**
+   Ensure your backend API URL is correctly pointed to your local backend server (usually `http://localhost:8000`). Create a `.env` file if necessary:
+   ```env
+   VITE_API_URL=http://localhost:8000
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. **Start the Development Server:**
+   ```bash
+   npm run dev
+   ```
+   The application will start with hot-module replacement (HMR). Open `http://localhost:5173` in your browser to view the app.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## 🚀 Building for Production
+
+To create an optimized production build, run:
+```bash
+npm run build
 ```
+The compiled assets will be output to the `dist` directory, ready to be deployed to platforms like Vercel, Netlify, or AWS S3.
 
-**Edit a file directly in GitHub**
+## 🤝 Contributing
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+When contributing to this frontend, please ensure you use the provided ESLint and Prettier configurations to maintain code quality:
+```bash
+npm run lint
+```

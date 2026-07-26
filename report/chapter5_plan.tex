@@ -1,0 +1,174 @@
+% ============================================================
+%  CHAPTER 5 — PROJECT PLANNING
+% ============================================================
+\chapter{Project Plan}
+
+
+\section{Development Methodology}
+
+MindTrace was developed using an \textbf{Agile-inspired iterative approach}.
+The project was divided into short development cycles (sprints), each
+producing a testable increment of the system. This allowed the team to
+validate individual components — such as the emotion model, backend API,
+and frontend dashboard — independently before full system integration.
+
+The key principles followed were:
+\begin{itemize}
+    \item \textbf{Iterative delivery}: Working features were demonstrated
+          at the end of each sprint rather than waiting for complete system
+          development.
+    \item \textbf{Continuous integration}: Code changes were merged
+          frequently and tested to detect integration issues early.
+    \item \textbf{Modular design}: Each system component (model, API,
+          database, frontend) was designed to be independently replaceable.
+    \item \textbf{Regular review}: Weekly team meetings were held to
+          assess progress, resolve blockers, and re-prioritise tasks.
+\end{itemize}
+
+\section{Team Structure and Roles}
+
+The project team consisted of five members, with responsibilities distributed
+as follows:
+
+\begin{table}[H]
+\centering
+\caption{Team Roles and Responsibilities}
+\begin{tabularx}{\textwidth}{lp{4.2cm}X}
+\toprule
+\textbf{Member}         & \textbf{Role}                  & \textbf{Primary Responsibilities} \\
+\midrule
+{Sankalp Gaikwad}        & Integration \& DevOps and Research  & Deployment, testing, report writing \\
+{Hemant Choudhary}       & Backend Developer              & FastAPI, authentication, API logic \\
+{Shraddha Dashpute}      & Database Manager               & MongoDB schema, data persistence \\
+{Priyanshu Jadhav}       & ML Engineer                    & Model training, RAF-DB preprocessing \\
+{Balaji Motkulwar}       & Frontend Developer             & React dashboard, webcam integration \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Project Milestones}
+
+The project was executed over approximately \textbf{six months} (September 2025
+to February 2026). The key milestones are listed below:
+
+\begin{table}[H]
+\centering
+\caption{Project Milestones}
+\begin{tabular}{lll}
+\toprule
+\textbf{Phase} & \textbf{Milestone}                          & \textbf{Target Month} \\
+\midrule
+Phase 1 & Requirements gathering and literature review       & September 2025 \\
+Phase 2 & Dataset preparation and model training             & October 2025   \\
+Phase 3 & Backend API development and testing                & November 2025  \\
+Phase 4 & Frontend dashboard development                     & December 2025  \\
+Phase 5 & System integration and end-to-end testing          & January 2026   \\
+Phase 6 & Deployment, optimisation, and report submission    & February 2026  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Task Breakdown}
+
+\subsection{Phase 1 — Requirements and Research}
+\begin{itemize}
+    \item Study of existing emotion recognition systems and benchmarks.
+    \item Selection of the RAF-DB dataset and ResNet-18 architecture.
+    \item Finalisation of system requirements and technology stack.
+    \item Drafting of SRS document.
+\end{itemize}
+
+\subsection{Phase 2 — Model Development}
+\begin{itemize}
+    \item Download and preprocessing of the RAF-DB dataset (15,339 images,
+          7 emotion classes).
+    \item Implementation of data augmentation pipeline (random flips,
+          rotations, colour jitter).
+    \item Fine-tuning ResNet-18 (pretrained on ImageNet) for 7-class
+          emotion classification.
+    \item Model evaluation and hyperparameter tuning to achieve target
+          accuracy ($>$85\%).
+\end{itemize}
+
+\subsection{Phase 3 — Backend Development}
+\begin{itemize}
+    \item Design and implementation of FastAPI REST endpoints.
+    \item Integration of MediaPipe Face Mesh for landmark detection.
+    \item Implementation of head pose estimation and blink detection.
+    \item Engagement score algorithm development and calibration.
+    \item JWT authentication and bcrypt password hashing implementation.
+    \item MongoDB schema design and Motor-based async database service.
+\end{itemize}
+
+\subsection{Phase 4 — Frontend Development}
+\begin{itemize}
+    \item Scaffolding of React + Vite project with component architecture.
+    \item Webcam capture module with configurable frame-rate control.
+    \item Live emotion overlay and engagement score display.
+    \item Recharts-based timeline and distribution chart components.
+    \item Session history view with pagination.
+    \item Admin panel for multi-user engagement monitoring.
+\end{itemize}
+
+\subsection{Phase 5 — Integration and Testing}
+\begin{itemize}
+    \item End-to-end integration testing of frontend-to-backend communication.
+    \item Performance benchmarking (latency, throughput).
+    \item Cross-browser compatibility testing (Chrome, Firefox, Edge).
+    \item Security testing (JWT validation, input sanitisation).
+    \item Bug fixes and performance optimisation.
+\end{itemize}
+
+\subsection{Phase 6 — Deployment and Documentation}
+\begin{itemize}
+    \item Backend deployment to Hugging Face Spaces via Docker container.
+    \item Frontend deployment to Vercel with environment variable configuration.
+    \item Final end-to-end system validation in production environment.
+    \item Completion of project report and preparation of presentation.
+\end{itemize}
+
+\section{Risk Management}
+
+Potential risks identified during planning and the mitigation strategies
+adopted are listed in the table below:
+
+\begin{table}[H]
+\centering
+\caption{Risk Register}
+\begin{tabular}{p{3.5cm} p{2cm} p{6.5cm}}
+\toprule
+\textbf{Risk}               & \textbf{Severity} & \textbf{Mitigation Strategy} \\
+\midrule
+Model accuracy below target & High   & Explore data augmentation, class balancing, and alternative architectures (MobileNetV2) \\
+Backend deployment failure  & Medium & Use Docker for reproducibility; maintain a local fallback environment \\
+Dataset licensing issues    & Medium & Use only publicly available, research-licensed datasets (RAF-DB) \\
+Webcam access denied by browser & Low & Prompt user with clear permission request and fallback error message \\
+Network latency degrading UX & Medium & Implement client-side frame buffering and graceful timeout handling \\
+Team member unavailability  & Low    & Cross-train team members on adjacent modules \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Tools and Technologies Used}
+
+\begin{table}[H]
+\centering
+\caption{Development Tools}
+\begin{tabular}{ll}
+\toprule
+\textbf{Tool / Technology} & \textbf{Purpose} \\
+\midrule
+Python 3.10             & Backend development and ML training \\
+PyTorch 2.x             & Deep learning model implementation \\
+FastAPI                 & REST API framework \\
+React 18 + Vite         & Frontend SPA framework \\
+MongoDB Atlas           & Cloud database \\
+Hugging Face Spaces     & Backend cloud deployment \\
+Vercel                  & Frontend cloud deployment \\
+Docker                  & Backend containerisation \\
+Git + GitHub            & Version control and collaboration \\
+VS Code                 & Primary IDE \\
+Postman                 & API testing \\
+\bottomrule
+\end{tabular}
+\end{table}

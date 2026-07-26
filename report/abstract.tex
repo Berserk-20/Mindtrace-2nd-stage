@@ -1,0 +1,20 @@
+% ============================================================
+%  ABSTRACT
+% ============================================================
+\chapter*{Abstract}
+\thispagestyle{plain}
+
+Real-time emotion recognition and engagement tracking in educational and professional environments remains a significant challenge, as traditional assessment methods are subjective and impractical at scale. \textbf{MindTrace} addresses this by providing a fully automated system that operates through a standard webcam without any additional hardware. It uses \textbf{MediaPipe Face Mesh} for face detection, feeding regions into a \textbf{ResNet-18} model fine-tuned on the \textbf{RAF-DB} dataset to classify seven emotional states: \textit{Angry, Disgust, Fear, Happy, Neutral, Sad,} and \textit{Surprise}. A composite engagement score (0--100) is computed by combining the detected emotion, head pose estimation, and blink-rate analysis.
+
+The backend is built on \textbf{FastAPI} following a stateless, client-driven architecture where individual webcam frames are sent via REST endpoints for inference, enabling seamless cloud deployment on \textbf{Hugging Face Spaces} without dependency on local hardware. All session data, emotion logs, and engagement metrics are persisted in a \textbf{MongoDB} database to support historical analytics and reporting. The \textbf{React} frontend delivers a professional analytics dashboard featuring live emotion overlays, session timelines, emotion distribution charts, and a multi-user admin panel. Security is handled through \textbf{JWT}-based authentication and \textbf{bcrypt} password hashing with role-based access control for students and administrators. The ResNet-18 model achieves over \textbf{85\%} validation accuracy on the RAF-DB benchmark, and the overall system demonstrates low-latency real-time performance suitable for deployment in e-learning platforms, corporate training environments, and remote work settings.
+
+% ── Keywords ────────────────────────────────────────────────
+\newpage
+\chapter*{Keywords}
+\thispagestyle{plain}
+
+\noindent
+Emotion Recognition, Facial Action Units, ResNet-18, RAF-DB Dataset,
+MediaPipe Face Mesh, Head Pose Estimation, Engagement Tracking, FastAPI,
+MongoDB, React, JWT Authentication, Deep Learning, Transfer Learning,
+Real-Time Processing, Student Engagement

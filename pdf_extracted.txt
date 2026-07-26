@@ -1,0 +1,1137 @@
+=== PAGE 1 ===
+A PROJECT REPORT ON
+Covid-19 Protocol Detection System Using
+Deep Learning
+SUBMITTED TO THE SAVITRIBAI PHULE PUNE UNIVERSITY ,
+PUNE IN THE PARTIAL FULFILLMENT OF THE REQUIREMENTS
+FOR THE AWARD OF THE DEGREE
+BACHELOR OF ENGINEERING
+(Computer Engineering)
+BY
+Shruti Pawar B150314309
+Vrushali Ghanekar B150314246
+Rohan Phatak B150314311
+Kashinath Vhanmane B150314345
+Under the guidance of
+Dr. B. D. Phulpagar
+DEPARTMENT OF COMPUTER ENGINEERING
+PES MODERN COLLEGE OF ENGINEERING
+SHIVAJINAGAR,PUNE 411005
+SAVITRIBAI PHULE PUNE UNIVERSITY, PUNE
+2021 - 22
+=== PAGE 2 ===
+CERTIFICATE
+This is to certify that the Project Entitled
+Covid-19 Protocol Detection System Using Deep Learning
+Submitted by
+Shruti Pawar B150314309
+Vrushali Ghanekar B150314246
+Rohan Phatak B150314311
+Kashinath Vhanmane B150314345
+is a bonafide work carried out by them under the supervision of Dr. B. D.
+Phulpagar and it is approved for the partial fulfillment of the requirement of
+Savtribai Phule Pune university, Pune for the award of the degree of Bachelor
+of Engineering (Computer Engineering).
+Dr. B. D. Phulpagar Prof. Dr. Mrs. S. A. ITKAR
+Guide Head
+Department of Computer Engineering Department of Computer Engineering
+Signature of Internal Examiner Signature of External Examiner
+=== PAGE 3 ===
+A Project Report on
+Covid-19 Protocol Detection System Using Deep Learning
+is successfully completed by
+Shruti Pawar B150314309
+Vrushali Ghanekar B150314246
+Rohan Phatak B150314311
+Kashinath Vhanmane B150314345
+at
+DEPARTMENT OF COMPUTER ENGINEERING
+PES MODERN COLLEGE OF ENGINEERING
+SAVITRIBAI PHULE PUNE UNIVERSITY,PUNE
+ACADEMIC YEAR 2021-2022
+Dr. B. D. Phulpagar Prof.Dr. Mrs. S. A. ITKAR
+Guide Head
+Department of Computer Engineering Department of Computer Engineering
+3
+=== PAGE 4 ===
+Acknowledgement
+It gives us pleasure in presenting the project report on ‘Covid-19 Protocol
+Detection System Using Deep Learning’ .
+Firstly, we would like to express our indebtedness appreciation to our guide
+Dr. B. D.Phulpagar . His constant guidance and advice played very im-
+portant role in successful completion of the project. He always gave us his
+suggestions, that were crucial in making this report as flawless as possible.
+We would like to express our gratitude towards Prof. Dr. Mrs. S. A.
+Itkar , Head of Computer Engineering Department, PES Modern College of
+Engineering for her kind co-operation and encouragement which helped us
+during the completion of this report.
+Also we wish to thank our Principal, Prof. Dr. Mrs. K. R. Joshi and
+all faculty members for their whole hearted co-operation for completion of
+this report. We also thank our laboratory assistants for their valuable help
+in laboratory.
+Last but not the least, the backbone of our success and confidence lies solely
+on blessings of dear parents and lovely friends.
+Shruti Pawar
+Vrushali Ghanekar
+Rohan Phatak
+Kashinath Vhanmane
+=== PAGE 5 ===
+Abstract
+The Covid-19 had a huge impact on different sectors in many countries and
+such impact caused problems to many people around the world. Alleviation
+in such pandemic can be solved by social distancing as well as putting on its
+face mask. This small step of wearing a face mask as well as following social
+distancing would save lots of lives as the spread of the virus could be mit-
+igated. This project is implemented by considering these facts of Covid-19
+protocols. The project aims to detect face mask, social distancing on video
+feed and also reminder for vaccination by using deep learning models.
+SSD algorithm is used for face mask detection and if mask is not wear then
+recognition of face will be done by using face recognition algorithm. YOLO
+object detection is used to detect the people in frame and distance is mea-
+sured by using Euclidean formula. This project also has one more feature
+that is detection for vaccination, so next dose will be calculated and reminder
+will be sent to user.Also developed a desktop application where admin will
+get notified and can monitor the violations. If violation happens, data will
+get stored into firebase database and it will also notify admin. The desktop
+application has features of viewing history of violated data, notification func-
+tionality, user registration, etc. The overall accuracy of our system is above
+90% depending on the quality of video we give as a input.
+=== PAGE 6 ===
+Keywords
+YOLO Object Detection, Firebase, SSD, face recognition
+=== PAGE 7 ===
+Contents
+1 Introduction 1
+1.1 Motivation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+1.2 Problem Definition and Objectives . . . . . . . . . . . . . . . 2
+1.2.1 Problem Definition . . . . . . . . . . . . . . . . . . . . 2
+1.2.2 Objectives . . . . . . . . . . . . . . . . . . . . . . . . . 2
+1.3 Project Scope . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+2 Literature survey 3
+2.1 Covid-19 Face Mask Detection Using TensorFlow, Keras and
+OpenCV . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+2.2 Social Distancing Detection with Deep Learning Model . . . . 5
+2.3 Real-Time Implementation Of Face Recognition System . . . . 5
+3 Software Requirements Specification 7
+3.1 Assumptions and Dependencies . . . . . . . . . . . . . . . . . 8
+3.2 Functional Requirements . . . . . . . . . . . . . . . . . . . . . 8
+3.2.1 Face Mask Detection . . . . . . . . . . . . . . . . . . . 8
+3.2.2 Face Recognition . . . . . . . . . . . . . . . . . . . . . 8
+3.2.3 Social Distancing . . . . . . . . . . . . . . . . . . . . . 8
+3.2.4 Vaccination . . . . . . . . . . . . . . . . . . . . . . . . 9
+3.2.5 Alert Messages . . . . . . . . . . . . . . . . . . . . . . 9
+3.3 External Interface Requirements . . . . . . . . . . . . . . . . . 9
+3.3.1 User Interfaces . . . . . . . . . . . . . . . . . . . . . . 9
+3.3.2 Hardware Interfaces . . . . . . . . . . . . . . . . . . . . 9
+3.4 Nonfunctional Requirements . . . . . . . . . . . . . . . . . . . 10
+3.4.1 Performance Requirements . . . . . . . . . . . . . . . . 10
+3.4.2 Software Quality Attributes . . . . . . . . . . . . . . . 10
+3.5 System Requirements . . . . . . . . . . . . . . . . . . . . . . . 10
+3.5.1 Database Requirements . . . . . . . . . . . . . . . . . . 10
+3.5.2 Software Requirements . . . . . . . . . . . . . . . . . . 11
+3.5.3 Hardware Requirements . . . . . . . . . . . . . . . . . 11
+=== PAGE 8 ===
+3.6 Analysis Models:SDLC Model to be applied . . . . . . . . . . 11
+4 System Design 13
+4.1 System Architecture . . . . . . . . . . . . . . . . . . . . . . . 14
+4.2 Mathematical Model . . . . . . . . . . . . . . . . . . . . . . . 15
+4.2.1 Centroid calculation and Euclidean distance formula . 15
+4.2.2 Non Max Supression . . . . . . . . . . . . . . . . . . . 16
+4.3 Data Flow Diagrams / UML Diagrams . . . . . . . . . . . . . 17
+4.3.1 Data Flow Diagram . . . . . . . . . . . . . . . . . . . . 17
+4.3.2 UML Diagrams . . . . . . . . . . . . . . . . . . . . . . 19
+5 Project Plan 22
+5.1 Project Estimate . . . . . . . . . . . . . . . . . . . . . . . . . 23
+5.1.1 Reconciled Estimates . . . . . . . . . . . . . . . . . . 23
+5.1.2 Human Resources . . . . . . . . . . . . . . . . . . . . . 23
+5.1.3 Development Resources . . . . . . . . . . . . . . . . . . 23
+5.2 Risk Management . . . . . . . . . . . . . . . . . . . . . . . . . 24
+5.2.1 Risk Identification . . . . . . . . . . . . . . . . . . . . 24
+5.2.2 Risk Analysis . . . . . . . . . . . . . . . . . . . . . . . 24
+5.2.3 Overview of Risk Mitigation, Monitoring, Management 25
+5.3 Project Schedule . . . . . . . . . . . . . . . . . . . . . . . . . 25
+5.3.1 Project Task Set . . . . . . . . . . . . . . . . . . . . . 25
+5.3.2 Task Network . . . . . . . . . . . . . . . . . . . . . . . 26
+5.4 Team Organization . . . . . . . . . . . . . . . . . . . . . . . . 26
+5.4.1 Team Structure . . . . . . . . . . . . . . . . . . . . . . 26
+5.4.2 Management reporting and communication . . . . . . . 26
+6 Project Implementation 27
+6.1 Overview of Project Modules . . . . . . . . . . . . . . . . . . 28
+6.1.1 Face Mask Module . . . . . . . . . . . . . . . . . . . . 28
+6.1.2 Social Distancing Module . . . . . . . . . . . . . . . . 28
+6.1.3 Vaccination . . . . . . . . . . . . . . . . . . . . . . . . 28
+6.2 Tools and Technologies Used . . . . . . . . . . . . . . . . . . . 29
+6.3 Algorithm Details . . . . . . . . . . . . . . . . . . . . . . . . . 29
+6.3.1 SSD . . . . . . . . . . . . . . . . . . . . . . . . . . . . 29
+6.3.2 YOLO V3 . . . . . . . . . . . . . . . . . . . . . . . . . 32
+6.3.3 Dlib Face-recognition . . . . . . . . . . . . . . . . . . . 36
+7 Software Testing 38
+7.1 Types of Testing . . . . . . . . . . . . . . . . . . . . . . . . . 39
+7.2 Test Cases . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 40
+=== PAGE 9 ===
+8 Results 42
+8.1 Outcomes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 43
+8.2 Screen Shots . . . . . . . . . . . . . . . . . . . . . . . . . . . . 43
+8.2.1 Admin Login: . . . . . . . . . . . . . . . . . . . . . . . 43
+8.2.2 Main System UI . . . . . . . . . . . . . . . . . . . . . . 44
+8.2.3 Add User Section . . . . . . . . . . . . . . . . . . . . . 44
+8.2.4 Violation Data Section . . . . . . . . . . . . . . . . . . 45
+8.2.5 Visualization Section . . . . . . . . . . . . . . . . . . . 46
+8.2.6 Profile Section . . . . . . . . . . . . . . . . . . . . . . . 46
+8.2.7 Covid Surveillance Section . . . . . . . . . . . . . . . . 47
+8.2.8 Desktop Notification . . . . . . . . . . . . . . . . . . . 47
+8.2.9 Database Structure . . . . . . . . . . . . . . . . . . . . 48
+8.2.10 Violated Data Storage . . . . . . . . . . . . . . . . . . 49
+9 Conclusion 50
+9.1 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 51
+9.2 Future Work . . . . . . . . . . . . . . . . . . . . . . . . . . . . 51
+9.3 Applications . . . . . . . . . . . . . . . . . . . . . . . . . . . . 51
+10 References 53
+Annexure A 55
+Annexure B 57
+=== PAGE 10 ===
+List of Figures
+4.1 Architecture Diagram . . . . . . . . . . . . . . . . . . . . . . . 14
+4.2 Mathematical Model-1 . . . . . . . . . . . . . . . . . . . . . . 15
+4.3 Mathematical Model-2 . . . . . . . . . . . . . . . . . . . . . . 16
+4.4 Data Flow Diagram Level 0 . . . . . . . . . . . . . . . . . . . 17
+4.5 Data Flow Diagram Level 1 . . . . . . . . . . . . . . . . . . . 17
+4.6 Data Flow Diagram Level 2 . . . . . . . . . . . . . . . . . . . 18
+5.1 Task Netwrok . . . . . . . . . . . . . . . . . . . . . . . . . . . 26
+=== PAGE 11 ===
+List of Tables
+2.1 Literature survey . . . . . . . . . . . . . . . . . . . . . . . . . 4
+5.1 Risk Identification. . . . . . . . . . . . . . . . . . . . . . . . . 25
+7.1 Unit Testing Test Cases . . . . . . . . . . . . . . . . . . . . . 40
+7.2 Integration Testing Test Cases . . . . . . . . . . . . . . . . . . 41
+7.3 System Testing Test Cases . . . . . . . . . . . . . . . . . . . . 41
+=== PAGE 12 ===
+CHAPTER 1
+INTRODUCTION
+=== PAGE 13 ===
+PESMCOE Covide-19 Protocol Detection System
+1.1 Motivation
+In world, one of the major concern is spreading covid-19 so fast and not
+following the rules leads to increase in cases. The biggest challenge for private
+sector like company, colleges is to follow the rules and employees or students
+can do their work. So we are decided to develop a system which detects the
+violation for covid-19 protocol. So it will help people to follow the rules and
+also for the organization to discipline the rules.
+1.2 Problem Definition and Objectives
+1.2.1 Problem Definition
+To implementing Covid-19 system using deep learning for identifying face
+mask, social distancing and vaccination along with detection and notifying
+functionality.
+1.2.2 Objectives
+•To detect whether person has wear face mask properly or not.
+•To reduce violation of Social Distancing rules.
+•To identify person is vaccinated or not.
+•Notifying organization.
+1.3 Project Scope
+This application specially design for private sectors like
+•Offices
+•Companies
+•College Campus
+•Apartments Etc.
+Dept. of Comp. Engg. 2021 - 22 2
+=== PAGE 14 ===
+CHAPTER 2
+LITERATURE SURVEY
+=== PAGE 15 ===
+PESMCOE Covide-19 Protocol Detection System
+No Title Author,Publisher
+and YearTechnique Remark
+1 Covid-19 Face
+Mask Detection
+Using TensorFlow,
+Keras and
+OpenCVArjya Das,
+Mohammad Wasif
+Ansari and Rohini
+Basak, 2020Keras and
+OpenCVKeras and
+OpenCV are
+used with the
+accuracy of
+94%
+2 Social Distancing
+Detection with
+Deep Learning
+ModelYew Cheong Hou,
+Mohd Zafri
+Baharuddin,
+Salman Yussof,
+Sumayyah
+Dzulkifly2020YOLO v3 YOLO v3 is
+used with the
+detection
+accuracy of
+90%
+3 Real-Time
+Implementation Of
+Face Recognition
+SystemNeel Ramakant
+Borkar, Sonia
+Kuwelkar, 2017PCA, LDA PCA and LDA
+algorithm are
+used with the
+accuracy of
+91%
+Table 2.1: Literature survey
+Dept. of Comp. Engg. 2021 - 22 4
+=== PAGE 16 ===
+PESMCOE Covide-19 Protocol Detection System
+2.1 Covid-19 Face Mask Detection Using Ten-
+sorFlow, Keras and OpenCV
+Author : Arjya Das, Mohammad Wasif Ansari and Rohini Basak
+Summary : COVID-19 pandemic has rapidly affected our dayto- day life
+disrupting the world trade and movements. Wearing a protective face mask
+has become a new normal. In the near future, many public service providers
+will ask the customers to wear masks correctly to avail of their services.
+Therefore, face mask detection has become a crucial task to help global soci-
+ety. This paper presents a simplified approach to achieve this purpose using
+some basic Machine Learning packages like TensorFlow, Keras, OpenCV and
+Scikit-Learn. The proposed method detects the face from the image correctly
+and then identifies if it has a mask on it or not. As a surveillance task per-
+former, it can also detect a face along with a mask in motion.
+2.2 Social Distancing Detection with Deep
+Learning Model
+Author : Yew Cheong Hou1, Mohd Zafri Baharuddin, Salman Yussof,
+Sumayyah Dzulkifly
+Summary : The paper presents a methodology for social distancing detec-
+tion using deep learning to evaluate the distance between people to mitigate
+the impact of this coronavirus pandemic. The detection tool was developed
+to alert people to maintain a safe distance with each other by evaluating a
+video feed. The video frame from the camera was used as input, and the
+open-source object detection pre-trained model based on the YOLOv3 al-
+gorithm was employed for pedestrian detection.Later, the video frame was
+transformed into top-down view for distance measurement from the 2D plane.
+The distance between people can be estimated and any non compliant pair
+of people in the display will be indicated with a red frame and red line.
+2.3 Real-Time Implementation Of Face Recog-
+nition System
+Author : Neel Ramakant Borkar, Sonia Kuwelkar
+Summary : Face Recognition is the ability to detect and recognize a person
+by their facial characteristics. Face is a multidimensional and hence requires
+Dept. of Comp. Engg. 2021 - 22 5
+=== PAGE 17 ===
+PESMCOE Covide-19 Protocol Detection System
+a lot of mathematical computations. Face recognition system is very essential
+and important for providing security, mug shot matching, law enforcement
+applications, user verification, user access control, etc and is mostly used for
+recognition for various applications. These all applications require an efficient
+Face recognition system. There are many methods that are already proposed
+and have low recognition capability, high false alarm rate. Hence the major
+task of the research is to develop face recognition system with improved
+accuracy and improved recognition time of an face recognition system. This
+paper proposes a hybrid face recognition algorithm by combining two face
+recognition techniques by integrating (PCA) principle Component Analysis,
+(LDA) Linear Discriminant Analysis.
+Dept. of Comp. Engg. 2021 - 22 6
+=== PAGE 18 ===
+CHAPTER 3
+SOFTWARE REQUIREMENTS
+SPECIFICATION
+=== PAGE 19 ===
+PESMCOE Covide-19 Protocol Detection System
+3.1 Assumptions and Dependencies
+For developing this system we are assuming that system has the information
+about people in organization. And also there is a person from organization
+as an admin who will constantly monitor this through our system.
+3.2 Functional Requirements
+3.2.1 Face Mask Detection
+For detection of face mask required modules like ’Face Recognition’ and ’SSD’
+are loaded into the system. ’SSD Module’ plays an important role to check
+whether mask is wear properly or not. If not, the module will detect user and
+notify to that user. SSD stands for ’Single Shot Multibox Detector’. It is a
+technique that is used to detect objects in images using a single deep neural
+network. Basically it is used for object detection in an image. We are using
+SSD for detecting mask as an object in our system. For this purpose we are
+labelling our image dataset (with-mask and without-mask). By labelling it
+means we are plotting co-ordinates for the position of mask over face. As
+these co-ordinates in turn will be used to detect whether person has wear
+mask properly or not.
+3.2.2 Face Recognition
+For detection of user, firstly User dataset will be loaded which is needed
+to train the model. Then we take the frame as input from the face mask
+detection module. After getting the frame, detection of face is done using
+SSD, extracting features of detected face is done using Face recognition.
+Finally classifying the extracted feature and then getting the details of the
+person who has not wear the mask properly. Once we get the details of that
+person we will notify that user. There is a possibility that the user may
+avoid our notification, so we calculate how often user is breaking the rules.
+Once the count for breaking the rule goes beyond standard count, system
+will notify to the organization.
+3.2.3 Social Distancing
+Social Distancing is methodology in which humans stay away from each other
+physically. For example, in current COVID-19 situation it is being followed
+widely, in order to prevent the spread of the disease. Our system detects
+Dept. of Comp. Engg. 2021 - 22 8
+=== PAGE 20 ===
+PESMCOE Covide-19 Protocol Detection System
+whether people follows social distancing rule or not and also notify organi-
+zation using deep learning. In this, firstly people in frame are detected using
+YOLO object detection algorithm. After detection of people, centroid point
+is calculated based on the Boundary Box. Then the distance between two
+centroid (people) calculated by using Euclidean distance formula. That dis-
+tance is compare with standard distance and if it is less then it will create a
+Red Boundary Box around them. If the total number of red Boundary boxes
+is maximum than standard count then social distancing rule is violated and
+it will notify the organization.
+3.2.4 Vaccination
+In vaccination module, it will use the User dataset. Based on the previous
+date of dose system will calculate next date of dose for every record in dataset.
+After that system will remind the user some days before the actual date of
+next dose.
+3.2.5 Alert Messages
+In this feature, alert message will get send via e-mail to person in organization
+who violates Covid-19 rules. Also it will be displayed on the admin panel so
+that admin can come to know who violated the rule and keep the record.
+3.3 External Interface Requirements
+3.3.1 User Interfaces
+We have developed UI so that Admin can easily monitor people through it.
+The interface shows information such as violated data, notification regarding
+rule violation and also have functionality for user registration.
+3.3.2 Hardware Interfaces
+3.3.2.1 External Camera
+For capturing live data, system also provides capability to connect external
+camera. So that system can get live data and it will start to work in real-time
+Dept. of Comp. Engg. 2021 - 22 9
+=== PAGE 21 ===
+PESMCOE Covide-19 Protocol Detection System
+3.4 Nonfunctional Requirements
+3.4.1 Performance Requirements
+For achieving better performance, quality of input video should be high. In
+case of external camera the capturing quality should be high.
+3.4.1.1 Protection for system generated data
+Frames will get stored in the form of zip file which are password protected
+and this password is only known to the Admin.
+3.4.1.2 Access Control
+Only the Admin has full access over the folder where violated frames are
+stored. Only Admin has full access over system.
+3.4.2 Software Quality Attributes
+•Testability
+•Reliability
+•Usability
+•Extensibility
+3.5 System Requirements
+3.5.1 Database Requirements
+3.5.1.1 Firebase
+- Real-time Database:
+Light weight data like text data will get stored.
+- Firebase Storage:
+Data having large size will get stored.
+Dept. of Comp. Engg. 2021 - 22 10
+=== PAGE 22 ===
+PESMCOE Covide-19 Protocol Detection System
+3.5.2 Software Requirements
+•Python version 3.8 and above
+•Microsoft Visual Studio 2022
+•Pycharm 2020.1.3 Community Edition
+3.5.3 Hardware Requirements
+•PC with min I3 Processor
+•8 GB RAM
+•500 GB HDD
+•At least 2GB Of VRAM
+3.6 Analysis Models:SDLC Model to be ap-
+plied
+Incremental Model
+It generates working software quickly and early during the software life cycle.
+Incremental Model is a process of software development where requirements
+are broken down into multiple standalone modules of software development
+cycle. Incremental development is done in steps from analysis design, imple-
+mentation, testing/verification, maintenance.
+Each iteration passes through the requirements, design, coding and test-
+ing phases. And each subsequent release of the system adds function to the
+previous release until all designed functionality has been implemented. The
+system is put into production when the first increment is delivered. The
+first increment is often a core product where the basic requirements are ad-
+dressed, and supplementary features are added in the next increments. Once
+the core product is analysed by the client, there is plan development for the
+next increment.
+Dept. of Comp. Engg. 2021 - 22 11
+=== PAGE 23 ===
+PESMCOE Covide-19 Protocol Detection System
+Characteristics of an Incremental module includes:
+•System development is broken down into many mini development projects.
+•Partial systems are successively built to produce a final total system.
+•Highest priority requirement is tackled first.
+•Once the requirement is developed, requirement for that increment are
+frozen.
+Incremental Phases includes:
+•Requirement Analysis: Requirement and specification of the software
+are collected.
+•Design : Some high-end function are designed during this stage.
+•Code : Coding of software is done during this stage.
+•Test : Once the system is deployed, it goes through the testing phase.
+Dept. of Comp. Engg. 2021 - 22 12
+=== PAGE 24 ===
+CHAPTER 4
+SYSTEM DESIGN
+=== PAGE 25 ===
+PESMCOE Covide-19 Protocol Detection System
+4.1 System Architecture
+Figure 4.1: Architecture Diagram
+Dept. of Comp. Engg. 2021 - 22 14
+=== PAGE 26 ===
+PESMCOE Covide-19 Protocol Detection System
+4.2 Mathematical Model
+4.2.1 Centroid calculation and Euclidean distance for-
+mula
+Figure 4.2: Mathematical Model-1
+In Social distancing module, after detecting people from frames and
+drawing rectangular box for them. Next step is to calculate the centroid for
+each person so that it will used in distance calculation.
+Formula for calculate Centroid :
+C1(x1, y1) = ( Xmin +Xmax )/2,(Y min +Y max )/2
+After that we have calculate the distance between two centroid using eu-
+clidean distance
+Formula for calculating Euclidean Distance :
+p
+(x2−x1)2+ (y2−y1)2
+Dept. of Comp. Engg. 2021 - 22 15
+=== PAGE 27 ===
+PESMCOE Covide-19 Protocol Detection System
+4.2.2 Non Max Supression
+Figure 4.3: Mathematical Model-2
+The purpose of non-max suppression is to select the best bounding box
+for an object and reject or “suppress” all other bounding boxes. The NMS
+takes two things into account
+•The objectiveness score is given by the model
+•The overlap or IOU of the bounding boxes
+Intersection Over Union (IoU) :
+The Intersection over Union (IoU) metric is essentially a method used usually
+to quantify the percent overlap between the ground truth BBox (Bounding
+Box) and the prediction BBox. However, in NMS, we find IoU between two
+predictions BBoxes instead.
+Dept. of Comp. Engg. 2021 - 22 16
+=== PAGE 28 ===
+PESMCOE Covide-19 Protocol Detection System
+4.3 Data Flow Diagrams / UML Diagrams
+4.3.1 Data Flow Diagram
+Figure 4.4: DFD Level 0
+Figure 4.5: DFD Level 1
+Dept. of Comp. Engg. 2021 - 22 17
+=== PAGE 29 ===
+PESMCOE Covide-19 Protocol Detection System
+Figure 4.6: DFD Level 2
+Dept. of Comp. Engg. 2021 - 22 18
+=== PAGE 30 ===
+PESMCOE Covide-19 Protocol Detection System
+4.3.2 UML Diagrams
+4.3.2.1 Use Case Diagram
+Dept. of Comp. Engg. 2021 - 22 19
+=== PAGE 31 ===
+PESMCOE Covide-19 Protocol Detection System
+4.3.2.2 State Diagram
+Dept. of Comp. Engg. 2021 - 22 20
+=== PAGE 32 ===
+PESMCOE Covide-19 Protocol Detection System
+4.3.2.3 Class Diagram
+Dept. of Comp. Engg. 2021 - 22 21
+=== PAGE 33 ===
+CHAPTER 5
+PROJECT PLAN
+=== PAGE 34 ===
+PESMCOE Covide-19 Protocol Detection System
+5.1 Project Estimate
+5.1.1 Reconciled Estimates
+•Cost Estimate: The software used for the application will incur no cost
+as it is all released under free open source licenses.
+•Time Estimate: 9-10 months
+5.1.2 Human Resources
+•Number of people : 4
+•Skills: Python, Js, Firebase APIs
+•Geographic restrictions: None
+•Client: In our project, the clients are private companies, apartments,
+institutes.
+•Stakeholders: Stakeholders are often members of the project team.
+Considering the project, stakeholders will be the people who will be
+using the application, i.e, the clients along with project team.
+5.1.3 Development Resources
+•Data Collection: Through user registrations
+•Software:
+1. Python libraries
+2. PyCharm IDEA
+3. Firebase Databse
+4. Firebase Storage
+•Hardware : Any 64 bit operating System with compatible hardware.
+Dept. of Comp. Engg. 2021 - 22 23
+=== PAGE 35 ===
+PESMCOE Covide-19 Protocol Detection System
+5.2 Risk Management
+5.2.1 Risk Identification
+1. Scope Risk
+2. Schedule Risk
+3. Integration Risk
+4. Technology Risk
+5.2.2 Risk Analysis
+1. Scope Risk : The continuous change of requirements in interative man-
+ner were considered in design.
+2. Schedule Risk : The time for study and implementation were found
+out and extra 1 months time was kept as backup month.
+3. Integration Risk : The modular development design was kept consis-
+tent and flexible so that integration of various functionalities is not a
+problem.
+4. Technology Risk : Technology support for a new module and improve-
+ments is considered.
+Dept. of Comp. Engg. 2021 - 22 24
+=== PAGE 36 ===
+PESMCOE Covide-19 Protocol Detection System
+5.2.3 Overview of Risk Mitigation, Monitoring, Man-
+agement
+Risk Category Probability Impact RMMM
+Clear understanding
+of the requirementsProject 50 Critical Mitigation
+Are skilled members
+availableTechnical 50 Critical Monitoring
+Will the technology
+meet the expectationsTechnical 50 Critical Mitigation
+Is the project scope
+stableProject 40 Critical Mitigation
+Do all customers know
+the importance of the
+productBusiness 30 Marginal Monitoring
+Table 5.1: Risk Identification.
+5.3 Project Schedule
+5.3.1 Project Task Set
+1. Literature Survey (T1)
+2. Creating Development Environment (T2)
+3. Developing Frontend (T3)
+4. Creating Storage Environment on Firebase Database (T4)
+5. Developing Backend (T5)
+6. Integration of Frontend and Backend (T6)
+7. Drafting Documentation (T7)
+Dept. of Comp. Engg. 2021 - 22 25
+=== PAGE 37 ===
+PESMCOE Covide-19 Protocol Detection System
+5.3.2 Task Network
+Figure 5.1: Task Network
+5.4 Team Organization
+The manner in which a team is organized and the mechanisms for reporting
+are noted. Updates regarding the improvement of project are given to the
+guide. Also once or twice a month,a meet is held with the project guide
+regarding updates.
+5.4.1 Team Structure
+The team structure for the project is identified. Roles are defined.
+•Shruti Pawar : Social Distancing module development and Documen-
+tation
+•Vrushali Ghanekar: Face recognition model development and Docu-
+mentation
+•Rohan Phatak : Face Mask Module Development and Documentation
+•Kashinath Vhanmane : Backend Development and Social Distancing
+module development.
+5.4.2 Management reporting and communication
+•Team is always in contact with the project guide.
+•Team members also collaborate in-person and work together to improve
+efficiency. Also, chat groups, mails, and online meetings are used for
+communication.
+Dept. of Comp. Engg. 2021 - 22 26
+=== PAGE 38 ===
+CHAPTER 6
+PROJECT IMPLEMENTATION
+=== PAGE 39 ===
+PESMCOE Covide-19 Protocol Detection System
+6.1 Overview of Project Modules
+6.1.1 Face Mask Module
+The Face Mask Module is the very first module of our system which is used
+to detect whether user has wear a mask properly or not. This module uses
+SSD algorithm which is an object detection algorithm which will detect mask
+as an object over the person’s face. Two major tasks are performed under
+face Mask module as follows:
+6.1.1.1 Face Mask Detection
+In this, actual process of mask detection occurs. Here using SSD object
+detection algorithm the model will predict whether user has wear mask or
+not on the given input data.
+6.1.1.2 Face recognition
+In this, face recognition occurs. Suppose in the earlier process if any user
+found who has not wear mask properly then, this sub module will recognise
+his/her face by comparing it with the data present in the database.
+6.1.2 Social Distancing Module
+The 2nd module in our system is Social Distancing module. In this module,
+the model detects the violations regarding social distancing. How it works is
+that from the input frames suppose a frame comes where it consist of group
+of people having very low distance between them, our model will consider
+this frame in our system as a violated frame and will save it locally.
+6.1.3 Vaccination
+Third and last module in our system is the Vaccination module. Task per-
+formed by this is to calculate the next probable dose date. What this module
+will do is that it will take current dose date and will calculate the next dose
+date and that date will get displayed and even will get sent to user via email.
+Dept. of Comp. Engg. 2021 - 22 28
+=== PAGE 40 ===
+PESMCOE Covide-19 Protocol Detection System
+6.2 Tools and Technologies Used
+•Visual Studio
+•Pycharm editor
+6.3 Algorithm Details
+6.3.1 SSD
+Working of SSD
+SSD has two components: a backbone model and SSD head. Backbone model
+usually is a pre-trained image classification network as a feature extractor.
+This is typically a network like ResNet trained on ImageNet from which the
+final fully connected classification layer has been removed. We are thus left
+with a deep neural network that is able to extract semantic meaning from
+the input image while preserving the spatial structure of the image albeit at
+a lower resolution. For ResNet34, the backbone results in a 256 7x7 feature
+maps for an input image. We will explain what feature and feature map are
+later on. The SSD head is just one or more convolutional layers added to this
+backbone and the outputs are interpreted as the bounding boxes and classes
+of objects in the spatial location of the final layers activations.
+In the figure below, the first few layers (white boxes) are the backbone,
+the last few layers (blue boxes) represent the SSD head.
+Grid cell
+Instead of using sliding window, SSD divides the image using a grid and
+Dept. of Comp. Engg. 2021 - 22 29
+=== PAGE 41 ===
+PESMCOE Covide-19 Protocol Detection System
+have each grid cell be responsible for detecting objects in that region of the
+image. Detection objects simply means predicting the class and location of
+an object within that region. If no object is present, we consider it as the
+background class and the location is ignored. For instance, we could use a
+4x4 grid in the example below. Each grid cell is able to output the position
+and shape of the object it contains.
+Now you might be wondering what if there are multiple objects in one grid
+cell or we need to detect multiple objects of different shapes. There is where
+anchor box and receptive field come into play.
+Anchor box
+Each grid cell in SSD can be assigned with multiple anchor/prior boxes.
+These anchor boxes are pre-defined and each one is responsible for a size and
+shape within a grid cell. For example, the swimming pool in the image below
+corresponds to the taller anchor box while the building corresponds to the
+wider box.
+Dept. of Comp. Engg. 2021 - 22 30
+=== PAGE 42 ===
+PESMCOE Covide-19 Protocol Detection System
+SSD uses a matching phase while training, to match the appropriate anchor
+box with the bounding boxes of each ground truth object within an image.
+Essentially, the anchor box with the highest degree of overlap with an object
+is responsible for predicting that object’s class and its location. This prop-
+erty is used for training the network and for predicting the detected objects
+and their locations once the network has been trained. In practice, each an-
+chor box is specified by an aspect ratio and a zoom level.
+Aspect ratio
+Not all objects are square in shape. Some are longer and some are wider,
+by varying degrees. The SSD architecture allows pre-defined aspect ratios of
+the anchor boxes to account for this. The ratios parameter can be used to
+specify the different aspect ratios of the anchor boxes associates with each
+grid cell at each zoom/scale level.
+Dept. of Comp. Engg. 2021 - 22 31
+=== PAGE 43 ===
+PESMCOE Covide-19 Protocol Detection System
+6.3.2 YOLO V3
+YOLO is an abbreviation for the term ‘You Only Look Once’. This is an algo-
+rithm that detects and recognizes various objects in a picture (in real-time).
+Object detection in YOLO is done as a regression problem and provides the
+class probabilities of the detected images.
+YOLO algorithm employs convolutional neural networks (CNN) to detect
+objects in real-time. As the name suggests, the algorithm requires only a
+single forward propagation through a neural network to detect objects. This
+means that prediction in the entire image is done in a single algorithm run.
+Importance of YOLO
+YOLO algorithm is important because of the following reasons:
+Speed: This algorithm improves the speed of detection because it can pre-
+dict objects in real-time.
+High accuracy: YOLO is a predictive technique that provides accurate
+results with minimal background errors.
+Dept. of Comp. Engg. 2021 - 22 32
+=== PAGE 44 ===
+PESMCOE Covide-19 Protocol Detection System
+Learning capabilities: The algorithm has excellent learning capabilities
+that enable it to learn the representations of objects and apply them in ob-
+ject detection.
+Working of YOLO
+YOLO algorithm works using the following three techniques:
+Residual blocks
+Bounding box regression
+Intersection Over Union (IOU)
+Residual blocks
+First, the image is divided into various grids. Each grid has a dimension of
+S x S. The following image shows how an input image is divided into grids.
+In the image above, there are many grid cells of equal dimension. Every grid
+cell will detect objects that appear within them. For example, if an object
+center appears within a certain grid cell, then this cell will be responsible for
+detecting it.
+Bounding box regression
+A bounding box is an outline that highlights an object in an image.
+Every bounding box in the image consists of the following attributes:
+Dept. of Comp. Engg. 2021 - 22 33
+=== PAGE 45 ===
+PESMCOE Covide-19 Protocol Detection System
+Width (bw)
+Height (bh)
+Class (for example, person, car, traffic light, etc.)- This is represented by
+the letter c.
+Bounding box center (bx,by)
+The following image shows an example of a bounding box. The bounding
+box has been represented by a yellow outline.
+YOLO uses a single bounding box regression to predict the height, width,
+center, and class of objects. In the image above, represents the probability
+of an object appearing in the bounding box.
+Intersection over union (IOU)
+Intersection over union (IOU) is a phenomenon in object detection that de-
+scribes how boxes overlap. YOLO uses IOU to provide an output box that
+surrounds the objects perfectly.
+Each grid cell is responsible for predicting the bounding boxes and their
+confidence scores. The IOU is equal to 1 if the predicted bounding box is
+the same as the real box. This mechanism eliminates bounding boxes that
+are not equal to the real box.
+Dept. of Comp. Engg. 2021 - 22 34
+=== PAGE 46 ===
+PESMCOE Covide-19 Protocol Detection System
+In the image above, there are two bounding boxes, one in green and the other
+one in blue. The blue box is the predicted box while the green box is the
+real box. YOLO ensures that the two bounding boxes are equal.
+Combination of the three techniques
+The following image shows how the three techniques are applied to produce
+the final detection results.
+First, the image is divided into grid cells. Each grid cell forecasts B bound-
+ing boxes and provides their confidence scores. The cells predict the class
+Dept. of Comp. Engg. 2021 - 22 35
+=== PAGE 47 ===
+PESMCOE Covide-19 Protocol Detection System
+probabilities to establish the class of each object.
+For example, we can notice at least three classes of objects: a car, a dog,
+and a bicycle. All the predictions are made simultaneously using a single
+convolutional neural network.
+Intersection over union ensures that the predicted bounding boxes are equal
+to the real boxes of the objects. This phenomenon eliminates unnecessary
+bounding boxes that do not meet the characteristics of the objects (like height
+and width). The final detection will consist of unique bounding boxes that
+fit the objects perfectly.
+For example, the car is surrounded by the pink bounding box while the
+bicycle is surrounded by the yellow bounding box. The dog has been high-
+lighted using the blue bounding box.
+6.3.3 Dlib Face-recognition
+Face recognition” API is built using dlib’s face recognition algorithms and it
+allows the user to easily implement face detection, face recognition and even
+real-time face tracking in your projects or from the command line.
+Face Encoding:
+The face recognition API generates face encodings for the face found in the
+images. A face encoding is basically a way to represent the face using a set of
+128 computer-generated measurements. Two different pictures of the same
+person would have similar encoding and two different people would have to-
+tally different encoding. After all the face encodings are generated, Support
+Vector Classifier (SVC) with scikit-learn is trained on the face encodings
+along with their labels from all the known faces in the training directory.
+Finally, the API detects all the faces in the test image you provide and the
+trained SVC predicts all the known faces in the test image.
+This tool maps an image of a human face to a 128 dimensional vector space
+where images of the same person are near to each other and images from
+different people are far apart. Therefore, you can perform face recognition
+by mapping faces to the 128D space and then checking if their Euclidean
+Dept. of Comp. Engg. 2021 - 22 36
+=== PAGE 48 ===
+PESMCOE Covide-19 Protocol Detection System
+distance is small enough.
+When using a distance threshold of 0.6, the dlib model obtains an accuracy
+of 99.38% on the standard LFW face recognition benchmark, which is com-
+parable to other state-of-the-art methods for face recognition as of February
+2017. This accuracy means that, when presented with a pair of face images,
+the tool will correctly identify if the pair belongs to the same person or is
+from different people 99.38% of the time.
+Dept. of Comp. Engg. 2021 - 22 37
+=== PAGE 49 ===
+CHAPTER 7
+SOFTWARE TESTING
+=== PAGE 50 ===
+PESMCOE Covide-19 Protocol Detection System
+7.1 Types of Testing
+•Unit Testing :
+There are multiple units components in our model. Unit testing is a
+type of testing used in which individual unit or group of related units
+are tested. So we have tested the individual modules of our system
+such as the quiz module, Search place module,Group Recommender
+module and the user profile module.In case user have clicked on some
+place then that place gets added to recently viewed place or not this
+we have done in unit testing part.
+•Integration Testing :
+It is a phase in software testing in which the units or modules are com-
+bined and tested as a group. This testing done after completion of unit
+testing. Here we combine the modules which are providing the same
+kind of functionality in a single unit and then we performed testing on
+it like we have combine the user profile with group recommender part
+so that user can join the different groups.We performed the testing on
+this module to check whether it is giving the group recommendation to
+the individual user or not.
+•System Testing :
+System testing is performed on the entire system, either in accordance
+with system requirement requirements, functional requirement speci-
+fications, or both. System testing examines the system’s design and
+behaviour, as well as the customer’s expectations.we have combined
+the separated modules into a single unit as a system and performed
+the system testing on it to check whether the system is providing the
+accurate recommendation to the user in any case if the user is new or
+existing.
+Dept. of Comp. Engg. 2021 - 22 39
+=== PAGE 51 ===
+PESMCOE Covide-19 Protocol Detection System
+7.2 Test Cases
+No. Functional Test Cases Actual Output Expected Output Test Status
+1Verify if Admin is able
+to login with appropri-
+ate credentials.Admin logged in
+successfully.Admin logged in
+successfully.Pass
+2Verify if the Admin is
+able to see the com-
+plete UI of the system.UI is visible. UI is visible. Pass
+3Verify if Admin can
+click on particular sec-
+tion on UI Window
+and that respective
+tab will get opened .Admin is able
+to click the tab
+he/she intends
+to open and that
+tab gets opened.Admin is able
+to click the tab
+he/she intends
+to open and that
+tab gets opened.Pass
+4Verify if Admin is able
+to enter new user de-
+tails along with users
+photo.Admin is able to
+enter new users
+data along with
+his/her ’s photo.Admin is able to
+enter new users
+data along with
+his/her ’s photo.Pass
+5Verify if application is
+able to show visualiza-
+tion for different types
+of violations using bar
+plot and pie plot.Application
+successfully
+displays the
+violations using
+mentioned plots.Application
+successfully
+displays the
+violations using
+mentioned plots.Pass
+6Verify if email notifi-
+cation/alert gets sent
+to the user identified
+by system.Email Notifica-
+tion/alert gets
+sent successfully.Email Notifica-
+tion/alert gets
+sent successfully.Pass
+7Verify if the profile
+page is working fineDisplay profile
+details correctly.Display profile
+details correctly.Pass
+Table 7.1: Unit Testing Test Cases
+Dept. of Comp. Engg. 2021 - 22 40
+=== PAGE 52 ===
+PESMCOE Covide-19 Protocol Detection System
+No. Functional Test Cases Actual Output Expected Output Test Status
+1To check whether the appli-
+cation chooses the selected
+module and loads pages ac-
+cordingly.The pages
+from
+ADMIN
+Module
+are loaded.The pages
+from
+ADMIN
+Module
+are loaded.Pass
+2To check whether the appli-
+cation stores data according
+to security constraints and
+displays the violation data
+with respect to two modules
+in system (i.e. Face Mask
+and Social Distancing Mod-
+ule) along with date of vio-
+lation.Successfully
+displays
+List of
+violations
+according
+to the
+criteria
+specified.Successfully
+displays
+List of
+violations
+according
+to the
+criteria
+specified.Pass
+Table 7.2: Integration Testing Test Cases
+No. Functional Test Cases Actual Output Expected Output Test Status
+1To check whether the appli-
+cation runs on the local ma-
+chineShould
+Display
+the In-
+tegrated
+Devel-
+opment
+Environ-
+mentApplication
+is runningPass
+2Verify if while processing or
+when the software is is run-
+ning state UI window is still
+accessible.User can
+still access
+UI win-
+dow while
+system is
+in running
+state.User can
+still access
+UI win-
+dow while
+system is
+in running
+state.Pass
+Table 7.3: System Testing Test Cases
+Dept. of Comp. Engg. 2021 - 22 41
+=== PAGE 53 ===
+CHAPTER 8
+RESULTS
+=== PAGE 54 ===
+PESMCOE Covide-19 Protocol Detection System
+8.1 Outcomes
+•Admin can provide the video as input to our system and can see the
+violations happened in that video. Such violated frames will get stored
+locally temporarily.
+•Admin can add new user/employee’s details into the system
+•The Admin can see the violated frames for each type of violation along
+with their respective visualization.
+•Database for maintaining records of users/employees, their data, vio-
+lated frames.
+8.2 Screen Shots
+8.2.1 Admin Login:
+Dept. of Comp. Engg. 2021 - 22 43
+=== PAGE 55 ===
+PESMCOE Covide-19 Protocol Detection System
+8.2.2 Main System UI
+8.2.3 Add User Section
+Dept. of Comp. Engg. 2021 - 22 44
+=== PAGE 56 ===
+PESMCOE Covide-19 Protocol Detection System
+8.2.4 Violation Data Section
+Dept. of Comp. Engg. 2021 - 22 45
+=== PAGE 57 ===
+PESMCOE Covide-19 Protocol Detection System
+8.2.5 Visualization Section
+8.2.6 Profile Section
+Dept. of Comp. Engg. 2021 - 22 46
+=== PAGE 58 ===
+PESMCOE Covide-19 Protocol Detection System
+8.2.7 Covid Surveillance Section
+8.2.8 Desktop Notification
+8.2.8.1 Face Mask Detection
+Dept. of Comp. Engg. 2021 - 22 47
+=== PAGE 59 ===
+PESMCOE Covide-19 Protocol Detection System
+8.2.8.2 Social Distancing Violation
+8.2.9 Database Structure
+Dept. of Comp. Engg. 2021 - 22 48
+=== PAGE 60 ===
+PESMCOE Covide-19 Protocol Detection System
+8.2.10 Violated Data Storage
+8.2.10.1 Violation type wise dividation
+8.2.10.2 Date Wise storage of violated frames
+Dept. of Comp. Engg. 2021 - 22 49
+=== PAGE 61 ===
+CHAPTER 9
+CONCLUSION
+=== PAGE 62 ===
+PESMCOE Covide-19 Protocol Detection System
+9.1 Conclusion
+The proposed and implemented system aims to help people in private sectors
+to follow the rules. We have provided the best possible solution to reduce
+the problem of violation of Covid-19 rules. The major concern that private
+sector facing is, proper follow of covid-19 protocols. Through this system,
+we can monitor the people in the organization that leads to help follow the
+rules and also reduce the new covid-19 cases. System also have functionality
+of alert, so that people gets the notification if they unfollow the rules.
+9.2 Future Work
+1. Updating used model:- The currently used models in the system require
+or work on specific image image quality. The updated models can be
+used to work on images having very high or very low quality.
+2. Implementing prediction capability for social distancing:- Currently the
+system is only capable for detecting violation of social distancing rules
+but in future we can expand this system to make it capable for pre-
+dicting the social distancing violation based on the live data.
+3. Creating lite version:- The currently developed application works well
+on high configuration hardware but when it comes to run on low con-
+figuration hardware it takes comparatively more load to generate the
+final result. As a future work we can try to make application light
+weight so that it can work on low configuration devices also.
+9.3 Applications
+1. Hospitals and Clinics:-
+This is an important domain that needs special attention during a
+pandemic. To safeguard the health of doctors and nurses, this system
+can be implemented to detect whether a patient is wearing a mask.
+A CCTV camera can be placed to detect mask and social distancing
+violations which can in turn help reduce crowding while patients are
+waiting in queues for their appointments.
+2. Airports:-
+Many of the destinations around the world have started easing travel
+restrictions. This system can be implemented in airports where people
+Dept. of Comp. Engg. 2021 - 22 51
+=== PAGE 63 ===
+PESMCOE Covide-19 Protocol Detection System
+are waiting in queues at check-in facilities, security clearance gates,
+passport control, waiting lobbies etc.
+3. Companies:-
+As many companies are opening after lockdown this system can be
+implemented to ensure that employees are following all the COVID 19
+safety protocols.
+Dept. of Comp. Engg. 2021 - 22 52
+=== PAGE 64 ===
+CHAPTER 10
+REFERENCES
+=== PAGE 65 ===
+PESMCOE Covide-19 Protocol Detection System
+[1] Yew Cheong Hou, Mohd Zafri Baharuddin, Salman Yussof, Sumayyah
+Dzulkifly Institute of Informatics and Computing in Energy College of
+Engineering Universiti Tenaga Nasional Kajang, Selangor, Malaysia.
+“Social Distancing Detection with Deep Learning Model”. 2020 8th
+International Conference on Information Technology and Multimedia
+(ICIMU).
+[2] Arjya Das, Mohammad Wasif Ansari, Rohini Basak. “Covid-19 Face
+Mask Detection Using TensorFlow, Keras and OpenCV”. 2020 IEEE
+17th India Council International Conference (INDICON).
+[3] Neel Ramakant Borkar, Sonia Kuwelkar. “Real-Time Implementation Of
+Face Recognition System”. Proceedings of the IEEE 2017 International
+Conference on Computing Methodologies and Communication (ICCMC).
+[4] Narinder Singh Punn, Sanjay Kumar Sonbhadra, Sonali Agarwal and
+Gaurav Rai. “Monitoring COVID-19 social distancing with person de-
+tection and tracking via fine-tuned YOLO v3 and Deepsort techniques”.
+27 Apr 2021.
+[5] Neel Ramakant Borkar, Sonia Kuwelkar Real-Time Implementation
+Of Face Recognition System.IEEE 2017 International Conference on
+Computing Methodologies and Communication (ICCMC).
+[6] Vasantha kumari A, Mohd.Umar Peerzade, Subhralina Nayak, Bhagya
+V, Shobana Padmanabhan. “Automatic Facemask Detection using
+MobileNetV2”. International Research Journal of Engineering and
+Technology (IRJET) Feb 2021.
+Dept. of Comp. Engg. 2021 - 22 54
+=== PAGE 66 ===
+ANNEXURE A
+=== PAGE 67 ===
+PESMCOE Covide-19 Protocol Detection System
+A problem is NP-hard if an algorithm for solving it can be translated into
+one for solving any NP-problem (nondeterministic polynomial time) problem.
+NP-hard therefore means ”at least as hard as any NP-problem,” although it
+might, in fact, be harder. Thus the problem statement implies that it is a
+NP-hard problem.
+Dept. of Comp. Engg. 2021 - 22 56
+=== PAGE 68 ===
+ANNEXURE B
+=== PAGE 69 ===
+PESMCOE Covide-19 Protocol Detection System
+Plagiarism of project report
+Dept. of Comp. Engg. 2021 - 22 58

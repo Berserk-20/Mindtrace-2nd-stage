@@ -1,0 +1,165 @@
+% ============================================================
+%  CHAPTER 4 — SYSTEM DESIGN
+% ============================================================
+\chapter{System Design}
+
+
+% ────────────────────────────────────────────────────────────
+\section{System Architecture}
+
+MindTrace follows a three-tier architecture: Presentation (React + Vite),
+Application (FastAPI + ResNet-18), and Data (MongoDB Atlas).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,height=0.55\textheight,keepaspectratio]{"System Architecture.png"}
+\caption{Architecture Diagram}
+\label{fig:arch}
+\end{figure}
+
+% ────────────────────────────────────────────────────────────
+\section{Data Flow Diagram}
+
+\subsection{DFD Level 0}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,height=0.65\textheight,keepaspectratio]{"dfd level 0.png"}
+\caption{DFD Level 0}
+\label{fig:dfd0}
+\end{figure}
+
+\subsection{DFD Level 1}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]{"dfd 1 level.png"}
+\caption{DFD Level 1}
+\label{fig:dfd1}
+\end{figure}
+
+% ────────────────────────────────────────────────────────────
+\section{UML Diagrams}
+
+\subsection{Use Case Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,height=0.65\textheight,keepaspectratio]{diag_usecase.png}
+\caption{Use Case Diagram}
+\label{fig:usecase}
+\end{figure}
+
+\subsection{State Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,height=0.55\textheight,keepaspectratio]{"State diagram.png"}
+\caption{State Diagram}
+\label{fig:state}
+\end{figure}
+
+\subsection{Class Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,height=0.55\textheight,keepaspectratio]{"Class diagram.png"}
+\caption{Class Diagram}
+\label{fig:class}
+\end{figure}
+
+% ────────────────────────────────────────────────────────────
+\section{Database Design}
+
+\subsection{Users Collection}
+
+\begin{table}[H]
+\centering
+\caption{Users Collection Schema}
+\begin{tabular}{lll}
+\toprule
+\textbf{Field}   & \textbf{Type} & \textbf{Description} \\
+\midrule
+\_id             & ObjectId  & Auto-generated primary key \\
+username         & String    & Unique display name \\
+email            & String    & Unique email address \\
+hashed\_password & String    & bcrypt hash of password \\
+role             & String    & \texttt{student} or \texttt{admin} \\
+created\_at      & DateTime  & Account creation timestamp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Sessions Collection}
+
+\begin{table}[H]
+\centering
+\caption{Sessions Collection Schema}
+\begin{tabular}{lll}
+\toprule
+\textbf{Field}    & \textbf{Type} & \textbf{Description} \\
+\midrule
+\_id              & ObjectId  & Auto-generated session ID \\
+user\_id          & ObjectId  & Reference to Users collection \\
+start\_time       & DateTime  & Session start timestamp \\
+end\_time         & DateTime  & Session end timestamp \\
+frames            & Array     & Per-frame analysis records \\
+avg\_engagement   & Float     & Mean engagement score \\
+dominant\_emotion & String    & Most frequent emotion \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ────────────────────────────────────────────────────────────
+\section{Module Design}
+
+\subsection{Frontend Modules}
+\begin{itemize}
+    \item \textbf{AuthModule} — Login, registration, JWT storage, route guards.
+    \item \textbf{WebcamModule} — Camera access, frame capture, Base64 encoding.
+    \item \textbf{AnalysisModule} — Polls \texttt{/api/analyze} and dispatches results.
+    \item \textbf{DashboardModule} — Live overlay, timeline chart, pie chart, controls.
+    \item \textbf{HistoryModule} — Paginated session history table.
+    \item \textbf{AdminModule} — Aggregated reports for all users.
+\end{itemize}
+
+\subsection{Backend Modules}
+\begin{itemize}
+    \item \textbf{auth\_router} — \texttt{/register} and \texttt{/login} endpoints.
+    \item \textbf{analysis\_router} — \texttt{/api/analyze} and session CRUD.
+    \item \textbf{emotion\_service} — MediaPipe + ResNet-18 inference pipeline.
+    \item \textbf{engagement\_service} — PnP head pose and blink-rate (EAR).
+    \item \textbf{db\_service} — Async MongoDB via Motor driver.
+    \item \textbf{security\_service} — JWT signing and bcrypt hashing.
+\end{itemize}
+
+% ────────────────────────────────────────────────────────────
+\section{Algorithm Design}
+
+\subsection{Emotion Recognition Pipeline}
+\begin{enumerate}
+    \item MediaPipe Face Mesh extracts 468 landmarks; bounding box computed
+          with 20\% padding.
+    \item Face crop resized to $224\times224$, normalised with ImageNet stats.
+    \item ResNet-18 produces 7-dim softmax vector; argmax = emotion label.
+\end{enumerate}
+
+\subsection{Head Pose Estimation}
+Six canonical 3D landmarks matched to 2D MediaPipe coordinates via
+\texttt{cv2.solvePnP}. Rodrigues formula converts rotation vector to Euler
+angles. Distraction flagged when $|\text{yaw}|>20°$ or $|\text{pitch}|>15°$.
+
+\subsection{Engagement Score}
+\[
+E = 0.5\,S_e + 0.35\,S_p + 0.15\,S_b \quad \in [0,100]
+\]
+where $S_e$=emotion score, $S_p$=pose score, $S_b$=blink score.
+
+% ────────────────────────────────────────────────────────────
+\section{Security Design}
+\begin{itemize}
+    \item JWT Bearer tokens required for all protected endpoints.
+    \item bcrypt (work factor 12) for password storage.
+    \item HTTPS enforced via Vercel and Hugging Face TLS.
+    \item Pydantic models validate all incoming request payloads.
+\end{itemize}

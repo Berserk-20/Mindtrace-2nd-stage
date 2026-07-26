@@ -1,0 +1,76 @@
+% ============================================================
+%  CHAPTER 2 — LITERATURE SURVEY
+% ============================================================
+\chapter{Literature Survey}
+
+This chapter reviews existing research and literature in the fields of deep
+learning-based facial expression recognition and human fatigue detection. A
+summary of the most relevant studies is presented in the tables below,
+followed by a brief analysis of how these works informed the development of
+MindTrace.
+
+% ── Survey Table Part 1 ──────────────────────────────────────
+\begin{table}[H]
+\centering
+\caption{Literature Survey of Facial Emotion and Fatigue Detection (Part 1)}
+\label{tab:lit_survey_1}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{|c|X|p{2.5cm}|X|p{2cm}|p{2cm}|}
+\hline
+\textbf{No.} & \textbf{Title \& Source} & \textbf{Techniques} & \textbf{Key Contribution} & \textbf{Pros} & \textbf{Cons} \\
+\hline
+1 & A Survey of Deep Learning FER Research -- IEEE Affective Computing, 2023 & CNN, ResNet, Attention & Comprehensive review of FER models (FER-2013, AffectNet). Discusses illumination and class imbalance. & Wide architecture coverage. & Lacks real-time integration. \\
+\hline
+2 & Improved FER Model Based on a Novel Deep Network -- Elsevier, 2024 & CNN, Batch Norm, Skip Conn. & Lightweight CNN with optimized residual links for high accuracy on RAF-DB. & Low latency; embedded ready. & Fails in poor lighting/ occlusion. \\
+\hline
+3 & Advancements in Driver Fatigue Detection -- Springer, 2024 & EAR, Facial Landmark Tracking & Hybrid system combining landmarks and blink pattern for early fatigue estimation. & Effective for safety systems. & Restricted to driver domain. \\
+\hline
+\end{tabularx}
+\end{table}
+
+\newpage
+
+% ── Survey Table Part 2 ──────────────────────────────────────
+\begin{table}[H]
+\centering
+\caption{Literature Survey of Facial Emotion and Fatigue Detection (Part 2)}
+\label{tab:lit_survey_2}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{|c|X|p{2.5cm}|X|p{2cm}|p{2cm}|}
+\hline
+\textbf{No.} & \textbf{Title \& Source} & \textbf{Techniques} & \textbf{Key Contribution} & \textbf{Pros} & \textbf{Cons} \\
+\hline
+4 & Non-Invasive Fatigue Detection via Facial Parameters -- ACM HCI, 2025 & Emotion Tracking, Parameter Ext. & Fatigue detection using facial parameter variations for adaptive interaction. & User-friendly; non-contact. & Needs stable face position. \\
+\hline
+5 & Fatigue Monitoring Using Wearables and AI -- IEEE Sensors, 2025 & CNN + Sensor Fusion & Multimodal framework combining sensors (heart rate, blink) with CNN emotion recognition. & High precision and robustness. & Relies on external sensors. \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Analysis of Existing Literature}
+
+The reviewed literature highlights a significant transition in the field of
+affective computing:
+
+\begin{itemize}
+    \item \textbf{From Pure Classification to Real-Time Systems}: Early
+          works focused primarily on achieving high accuracy on static
+          datasets. Recent trends, as seen in the work from Elsevier (2024),
+          prioritize lightweight architectures suitable for deployment.
+    
+    \item \textbf{Introduction of Fatigue Metrics}: The integration of
+          biometric signals like Eye Aspect Ratio (EAR), documented by
+          Springer (2024), provides a deterministic way to measure focus
+          and fatigue that complements emotional state analysis.
+    
+    \item \textbf{Multimodal vs.\ Visual-Only}: While multimodal systems
+          (IEEE Sensors, 2025) offer high precision, the hardware
+          complexity of wearables limits their adoption in standard
+          e-learning environments. This justifies MindTrace's focus on
+          purely visual, non-invasive monitoring.
+\end{itemize}
+
+MindTrace builds upon these foundations by combining the lightweight residual
+learning approach for emotion classification with the non-invasive facial
+parameter extraction for engagement scoring, delivering a unified real-time
+system that operates on standard consumer hardware.

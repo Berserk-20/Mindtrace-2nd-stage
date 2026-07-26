@@ -14,7 +14,7 @@ venv/
 dataset/
 dataset1/
 dataset2/
-frontend/
+
 # Temporary / Local DB
 users.json
 

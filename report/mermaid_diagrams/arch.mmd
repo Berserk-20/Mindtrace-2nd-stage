@@ -1,0 +1,38 @@
+graph TD
+    subgraph Input_UI[Input UI]
+        W[Webcam/Browser]
+        U[Upload Video]
+    end
+
+    subgraph System[System Internal Structure]
+        subgraph Face_Detection[Face Detection Module]
+            MP[MediaPipe FaceMesh]
+            ROI[Extract Face ROI]
+        end
+        subgraph Emotion[Emotion & Engagement Module]
+            RN[ResNet-18 Inference]
+            HP[Head Pose Solver]
+            SC[Engagement Score]
+        end
+        subgraph Storage[Auth & Storage Module]
+            FA[FastAPI Auth]
+            MDB[(MongoDB Atlas)]
+        end
+    end
+
+    subgraph Output_UI[Output UI]
+        DB[Live Dashboard]
+        SR[Session Report]
+    end
+
+    W --> MP
+    U --> MP
+    MP --> ROI
+    ROI -- Detected Face --> RN
+    ROI --> HP
+    RN --> SC
+    HP --> SC
+    FA <--> MDB
+    SC --> MDB
+    SC --> DB
+    MDB --> SR

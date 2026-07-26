@@ -1,0 +1,792 @@
+MindTrace : Real-Time Detection of Mental Fatigue
+and Focus Using Facial Expression
+Guide : Prof. Mrs. Yogita Narwadkar
+Department of Computer Engineering, PESMCOE, Pune, India
+Shraddha Dashpute, Hemant Choudhary, Sankalp Gaikwad, Priyanshu Jadhav, Balaji Motkulwar
+Department of Computer Engineering
+P.E.S. Modern College of Engineering, Pune– 411005
+
+Abstract - In today’s digital world, prolonged
+screen exposure among students and employees
+often leads to mental fatigue, stress, and reduced
+productivity. Traditional productivity tools fail to
+monitor emotional well-being, focusing only on
+time and task completion. This paper presents
+MindTrace,
+a
+real-time
+emotion-based
+productivity monitoring system that detects
+emotions and fatigue levels using facial
+expressions. The system employs computer vision
+and a Convolutional Neural Network (CNN)
+trained on the FER-2013 dataset to classify
+emotions such as happiness, sadness, and anger
+from webcam input. Based on continuous
+emotional trends, it identifies fatigue and
+provides real-time suggestions to help users
+regain focus. The results are visualized on a
+Streamlit dashboard, allowing users to track
+emotional patterns and productivity over time.
+This approach bridges the gap between
+emotional
+awareness
+and
+performance
+enhancement, promoting mental wellness and
+efficiency in digital workspaces.
+Keywords - Emotion Detection, Deep Learning,
+Facial Expression Recognition, Convolutional
+Neural Network (CNN), Fatigue Detection,
+Human–Computer Interaction (HCI), Real-Time
+Analysis, Productivity Monitoring, Streamlit
+Dashboard, FER-2013 Dataset, Computer Vision,
+Artificial Intelligence (AI), Cognitive State
+Recognition.
+
+I.
+
+INTRODUCTION
+
+In the age of digital learning and remote work,
+individuals spend long hours interacting with
+screens, often leading to unnoticed mental fatigue
+and emotional exhaustion. These factors directly
+
+affect focus, performance, and overall productivity.
+Traditional productivity tools measure output in
+terms of time and task completion but fail to account
+for the user’s emotional and cognitive state, which
+plays a vital role in effective learning and work
+performance. With advancements in Affective
+Computing and Artificial Intelligence, it has become
+possible to detect human emotions using facial
+expressions and behavioral cues. This growing field
+enables systems to interpret emotions such as
+happiness, stress, or fatigue in real time. The
+motivation behind this project is to utilize such
+emotion-aware systems to help users identify fatigue
+early and maintain optimal productivity. Therefore,
+this work introduces MindTrace, an intelligent
+system that continuously monitors facial emotions,
+analyzes fatigue levels, and provides real-time
+suggestions to enhance user focus and well-being,
+making it highly relevant in today’s technologydriven lifestyle.
+A. Motivation and Problem Statement
+In today’s digital era, students and employees spend
+long hours in front of computers for learning and
+professional work. Continuous screen exposure and
+mental load often lead to fatigue, stress, and reduced
+productivity — problems that typically go unnoticed
+until performance declines. While numerous studies
+have explored emotion detection and engagement
+analysis using facial expressions and deep learning,
+most systems fail to provide real-time feedback or
+actionable insights to users. This gap between
+emotion recognition and user well-being inspired the
+development of MindTrace, a system that not only
+detects emotions and fatigue levels but also assists
+users in maintaining focus through intelligent
+suggestions and visual feedback. The motivation
+behind this survey is to study existing techniques,
+understand their limitations, and highlight how real-
+
+time, emotion-aware systems can improve cognitive
+performance and digital wellness.
+To develop a real-time emotion-based productivity
+monitoring system that uses facial expression
+analysis through deep learning to detect fatigue and
+emotional fluctuations, and provides intelligent
+feedback or suggestions to help users maintain
+focus, reduce mental fatigue, and enhance overall
+productivity.
+B. Objective and Scope
+The main objective of this survey paper is to review
+and analyze existing research studies related to
+facial emotion recognition and fatigue detection
+using deep learning and computer vision techniques.
+It aims to examine the strengths and limitations of
+current emotion-based systems designed for
+engagement or productivity monitoring. The paper
+identifies key research gaps, such as the lack of realtime feedback, visualization, and adaptive user
+support in existing models. To address these gaps,
+the proposed system, MindTrace, is introduced as an
+advanced approach that integrates real-time emotion
+detection, fatigue analysis, and intelligent
+suggestion generation to enhance user focus and
+mental well-being. Ultimately, the objective is to
+demonstrate how MindTrace can provide a more
+effective and user-centered solution for maintaining
+productivity and emotional balance in digital
+environments.
+
+II.
+
+RELATED WORK
+
+Gupta et al. — Multimodal engagement detection
+Proposes a multimodal student engagement system
+combining facial emotions (CNN: VGG-19 /
+ResNet-50), eye-blink (EAR) and head movement
+(landmarks) to compute an Engagement Index (EI);
+evaluated on WIDER Face, FER-2013, CK+ and a
+small in-house dataset; reports high real-time
+engagement accuracy and shows multimodal fusion
+improves robustness. [1] . Das & Dev — Facial +
+behavioral AU mapping Focuses on mapping Facial
+Action Units (AUs) and behavioral features to
+engagement labels, compares traditional ML
+(XGBoost) vs deep learning (EfficientNet etc.), and
+studies AU→engagement statistical metrics
+(conditional probability, RAR, SDC). Shows
+multimodal + AU features significantly improve
+engagement detection; experiments use WACV and
+DAiSEE. [2]. Nguyen et al. —FER for synchronous
+collaborative learning Uses FER to study emotion
+regulation and socially-shared regulation in
+synchronous CSCL (small group video study).
+
+Emphasizes methodological insights (process
+mining, qualitative coding) and suggests using pretrained face/localization + FER modules for realistic
+classroom video analysis. Useful for behavioral /
+group-level analysis rather than only per-user
+automation. [3] Salloum et al. — CNN design for
+education. Presents a refined CNN trained on
+FER2013 (data augmentation, regularization) for
+seven emotion classes and claims very high test
+accuracy (paper reports up to 95% under their
+setup). Emphasizes preprocessing and training tricks
+for robust FER in educational settings and argues for
+transfer learning / careful augmentation for real time
+apps. [4].
+
+III.
+
+RESEARCH GAPS / LIMITATIONS
+
+Existing studies on emotion and engagement
+detection have made significant progress in facial
+expression recognition using deep learning, yet
+several critical gaps remain. Most research primarily
+focuses on emotion classification accuracy but fails
+to translate emotional data into actionable feedback
+or suggestions for improving user productivity and
+well-being. Many systems rely on high-end GPUs or
+multimodal inputs (e.g., gaze, EEG, keystrokes),
+making them difficult to deploy on regular laptops.
+Additionally, existing works lack real-time, session
+based dashboards that visualize emotional trends or
+fatigue levels over time. Few studies address
+continuous
+monitoring
+and
+personalized
+recommendations to maintain focus or prevent
+burnout. Hence, there is a need for a lightweight,
+real-time system that not only detects emotions but
+also analyzes fatigue patterns, provides smart
+suggestions, and visualizes user productivity trends
+— all of which form the novelty of the proposed
+MindTrace system.
+
+IV.
+
+DATASET
+
+FER – 2013
+FER-2013 dataset is used to train and test the face
+images in the proposed system for facial emotion
+recognition. It’s a publicly available dataset from the
+Wolfram data repository. Images in the FER-2013
+dataset are registered automatically in such a manner
+to allow equal space to the face area in all images.
+The sample images are shown in Fig. 1. The
+summary of the FER 2013 dataset is given in Table
+1.
+
+Fig 1. Sample images from FER-2013
+
+TABLE 1. Dataset details
+Name
+
+Year
+
+Size
+(No of images)
+
+Image Size
+(in pixel)
+
+Gray/Color
+
+Types of Face Variations
+
+FER - 2013
+
+2013
+
+35,877
+
+48 X48
+
+Gray Scale
+
+Angry, Disgust, Frustration,
+Happy, Sad, Surprise,
+Neutral
+
+V.
+
+METHODOLOGY
+
+The proposed system MindTrace aims to detect and
+analyze emotions in real time using facial
+expressions and monitor fatigue levels to enhance
+productivity. The methodology integrates Computer
+Vision, Deep Learning, and Data Visualization
+techniques for effective emotion based feedback.
+
+•
+
+(x, y, w, h) = FaceDetector(ft )
+•
+
+A. INITIALIZATION
+•
+
+Start system and initialize webcam, frame
+capture rate (1 FPS), and CNN model.
+
+•
+
+Load the pre-trained or self-trained MiniXception model for emotion detection.
+
+Crop and resize detected face region to
+48 × 48pixels:
+I ′ = resize(Iface , (48,48))
+
+D. PREPROCESSING
+•
+
+Initialize: Model
+= MiniXception(weights = FER2013)
+B. VIDEO FRAME ACQUISITION
+
+Each frame is processed using MediaPipe
+or Haar Cascade Classifier to detect face
+coordinates:
+
+Convert the cropped image to grayscale
+and normalize pixel values between 0 and
+1 for CNN input:
+Inorm =
+
+•
+
+I′
+255
+
+•
+
+Capture real-time video using OpenCV:
+
+Reshape image tensor to match model input
+shape:
+
+•
+
+cap = cv2.VideoCapture(0)
+
+Input = Inorm . reshape(1,48,48,1)
+
+•
+
+Extract frames at defined intervals:
+ft = V(t),where t = 1,2,3, . . .
+where ft = frame at time t.
+
+C. FACE DETECTION
+
+E. EMOTION RECOGNITION
+•
+
+The normalized image is passed to the
+CNN model (Mini-Xception) for emotion
+classification.
+
+•
+
+The CNN applies convolutional filters,
+ReLU activation, batch normalization, and
+global average pooling to extract features.
+
+Mathematical Model (Simplified):
+𝑂 = 𝑆𝑜𝑓𝑡𝑚𝑎𝑥(𝑊𝑛 ∗ 𝑓𝑛−1 + 𝑏𝑛 )
+where:
+
+•
+
+o
+
+“Take a short break”
+
+o
+
+“Stretch for a minute”
+
+o
+
+“Drink some water”
+
+Implemented using a simple rule-based
+system:
+
+•
+
+𝑊𝑛 and 𝑏𝑛 are weights and bias of the final
+layer.
+
+•
+
+𝑓𝑛−1 is the output of the penultimate layer.
+
+•
+
+𝑂gives probability distribution across
+emotion classes.
+
+H. DASHBOARD VISUALIZATION
+•
+
+Store session data (timestamp, emotion
+label, fatigue score) in database.
+
+𝐸𝑚𝑜𝑡𝑖𝑜𝑛 = arg⁡ max⁡(𝑂)where 𝑂
+= [𝑝ℎ𝑎𝑝𝑝𝑦 , 𝑝𝑠𝑎𝑑 , 𝑝𝑎𝑛𝑔𝑟𝑦 , 𝑝𝑛𝑒𝑢𝑡𝑟𝑎𝑙 , . . . ]
+
+•
+
+Plot real-time graphs using Streamlit:
+
+𝑖𝑓(𝐹 ≥ 𝑡ℎ𝑟𝑒𝑠ℎ𝑜𝑙𝑑): 𝑆𝑢𝑔𝑔𝑒𝑠𝑡𝑖𝑜𝑛 = 𝑆(𝐹)
+
+Output:
+
+F.
+
+FATIGUE DETECTION
+
+•
+
+Maintain a rolling window of recent
+emotions 𝐸 = [𝑒1 , 𝑒2 , . . . , 𝑒𝑛 ].
+
+•
+
+Compute fatigue score (F) as the ratio of
+negative/neutral emotions to total emotions
+over a time period:
+𝐹=
+
+𝐶𝑜𝑢𝑛𝑡(𝑛𝑒𝑔𝑎𝑡𝑖𝑣𝑒 + 𝑛𝑒𝑢𝑡𝑟𝑎𝑙)
+𝐶𝑜𝑢𝑛𝑡(𝑡𝑜𝑡𝑎𝑙)
+
+o
+
+Emotion distribution (pie chart).
+
+o
+
+Fatigue level over time (line
+graph).
+
+o
+
+Session summary statistics.
+
+I.
+
+OUTPUT GENERATION
+
+•
+
+Real-Time Outputs: Emotion label, fatigue
+alert, suggestion.
+
+•
+
+Session Outputs: Graphical report and
+productivity summary.
+
+If 𝐹 ≥ 0.6→ Fatigue Detected
+G. SUGGESION MODULE
+•
+
+VI.
+
+When fatigue is detected, system triggers
+context-based suggestions such as:
+
+Fig 2. Architecture Diagram
+
+SYSTEM ARCHITECTURE
+
+VII.
+
+COMPARATIVE ANALYSIS
+TABLE. 2. Comparative Analysis
+
+Parameter
+
+Gupta et al.
+(2023)
+
+Das & Dev
+(2025)
+
+Nguyen et al.
+(2024)
+
+Salloum et al.
+(2025)
+
+Technique
+Used
+
+Multimodal
+deep learning
+(CNN + eye
+blink + head
+pose)
+FER-2013,
+CK+, custom
+
+AU-based
+feature fusion
+with XGBoost
+& EfficientNet
+
+FER and
+behavioral
+analysis in
+collaborative
+
+Deep CNN
+trained on
+FER2013
+
+WACV,
+DAiSEE
+
+Real classroom
+videos
+
+FER-2013
+
+Objective
+
+Engagement
+detection in elearning
+
+Engagement
+estimation
+using AUs
+
+Emotion
+regulation in
+group learning
+
+Emotion
+detection in
+education
+
+Hardware
+Requirement
+
+High (GPUbased)
+
+High (multicamera setup)
+
+Moderate
+
+Output Type
+
+Engagement
+index score
+
+Moderate
+(multimodal
+setup)
+Engagement
+level prediction
+
+Group emotion
+mapping
+
+Emotion
+classification
+
+Visualization
+Support
+
+Limited
+(numerical
+output)
+E-learning only
+
+Limited
+
+Qualitative
+graphs
+
+None
+
+Engagement
+monitoring
+
+Collaborative
+learning
+
+Smart
+classrooms
+
+Multimodal
+fusion
+
+AU-behavior
+correlation
+
+Emotion coregulation
+
+High accuracy
+FER
+
+ADVANTAGES OVER EXISTING
+METHODS
+
+IX.
+
+APPLICATIONS
+
+Dataset Used
+
+Application
+Domain
+Novelty
+
+VIII.
+
+•
+•
+•
+•
+
+•
+Works in real time without GPU
+dependency.
+Integrates emotion detection + fatigue
+analysis + suggestions — not just
+classification.
+Provides a visual dashboard for user selfassessment.
+Lightweight and deployable on standard
+laptops.
+
+•
+
+Proposed
+System
+(MindTrace)
+CNN (MiniXception) for
+facial emotion
++ fatigue
+detection
+FER-2013
+(trained) + realtime webcam
+input
+Productivity
+enhancement
+using real-time
+emotion &
+fatigue analysis
+Low (runs on
+CPU-based
+laptop)
+Real-time
+fatigue alerts,
+emotion trends,
+productivity
+dashboard
+Interactive
+Streamlit
+dashboard
+Both workplace
+and e-learning
+productivity
+Real-time
+fatigue
+detection, live
+suggestions,
+and
+visualization
+
+Educational Platforms: MindTrace can be
+integrated into online learning systems to
+monitor students’ attention and emotional
+engagement during virtual classes, helping
+educators identify fatigue and improve
+teaching methods.
+Corporate
+Workplaces:
+Used
+by
+companies to track employees’ focus and
+mental wellness during long work hours,
+
+•
+
+•
+
+•
+
+X.
+
+enabling managers to promote healthy
+work habits and prevent burnout.
+Healthcare and Mental Wellness: Helps
+psychologists or wellness apps assess
+emotional stability and fatigue patterns for
+early detection of stress or depression.
+Personal Productivity Tools: Individuals
+can use MindTrace for self-monitoring to
+understand their daily emotional trends,
+identify fatigue cycles, and improve work–
+life balance.
+Human–Computer Interaction (HCI):
+Enhances adaptive systems that respond to
+user emotions in real time, creating more
+personalized and emotion-aware digital
+experiences.
+CONCLUSION
+
+The proposed system MindTrace – Real-Time
+Emotion-Based Productivity Monitoring System
+successfully combines facial emotion detection,
+fatigue analysis, and real-time feedback to enhance
+focus and productivity among students and
+employees. By utilizing computer vision and a
+CNN-based model (Mini-Xception) trained on the
+FER-2013 dataset, the system accurately identifies
+user emotions and detects fatigue based on
+continuous emotional patterns. Unlike previous
+studies that focus solely on emotion classification,
+MindTrace provides personalized suggestions and a
+dashboard visualization to help users track their
+mental and emotional states over time.
+XI.
+
+FUTURE SCOPE
+
+In the future, the system can be extended by
+incorporating multimodal inputs such as voice tone,
+posture, or eye gaze for improved accuracy.
+Integration with wearable devices and AI based task
+schedulers can offer deeper cognitive insights and
+automated work-rest cycle adjustments. Cloudbased deployment and mobile application support
+can further enhance accessibility, making
+MindTrace a complete digital wellness and
+productivity management solution.
+XII.
+
+REFERENCES
+
+[1] Das, D., & Dev, S. (2025). Facial and Behavioral
+Feature Fusion for Engagement Estimation Using
+Machine and Deep Learning Techniques. Neural
+Computing and Applications, Elsevier.
+[2] Salloum, S., & Al-Emran, M. (2025). Deep
+CNN-Based Facial Emotion Recognition for Smart
+Learning
+Environments.
+Smart
+Learning
+Environments, Springer.
+
+[3] Qian C., “Real-time emotion recognition based
+on facial expressions: systematic review and
+bibliometric analysis”, 2025.
+[4] Thakur S.R., Thakre L., Ghosh M., “Combatting
+Driver Fatigue with Real-Time AI-Powered
+Detection and Prevention Technologies”, 2025.
+[5] Chen J., et al., “Driver Fatigue Detection Using
+EEG-Based Graph Attention Convolutional Neural
+Network (GAT-CNN)”, Elsevier, 2025.
+[6] Nguyen, T. T., Chen, W., & Lee, M. (2024).
+Emotion Recognition and Regulation in
+Synchronous Collaborative Learning Environments.
+International Journal of Artificial Intelligence in
+Education (IJAIED), Springer.
+[7] Kopalidis T., Nikou C., “Advances in Facial
+Expression Recognition: A Survey of Deep
+Learning and Datasets”, Information, 2024.
+[8] Salem D., Waleed M., “Drowsiness detection in
+real-time via convolutional neural networks and
+transfer learning”, Journal of Engineering &
+Applied Science, vol. 71, 2024.
+[9] Aly M., “Advanced facial expression recognition
+for real-time student progress tracking via deep
+learning”, Multimedia Tools & Applications, 2024.
+[10] Mokashi B., et al., “Deep Learning Approach
+for Drowsiness Detection Using Facial Features”,
+TIJER, 2024.
+[11] Kharat T., Meshram S., Kardile K., “Driver
+Fatigue Detection using Machine Learning”,
+International Journal of Ingenious Research, 2024.
+[12] Gupta, A., Yadav, D., & Singh, A. (2023).
+Multimodal Engagement Detection Using Deep
+Learning and Behavioral Features for E-Learning
+Environments. Journal of Ambient Intelligence and
+Humanized Computing, Springer.
+[13] Sedik A., et al., “An Adaptive Fatigue
+Detection System Based on 3D CNNs”, Symmetry,
+vol. 15, no. 6, 2023.
+[14] Dang W.D., “Multilayer Network-Based CNN
+Model for Emotion Recognition”, Journal of
+Applied Sciences, 2022.
+[15] Dang X., et al., “A Systematic Review on
+Affective Computing: Emotion Models, Databases,
+and Recent Advances”, 2022.
+
+[16] Guo Y., “Real-Time Facial Affective
+Computing on Mobile Devices”, IEEE CVPR
+Workshops, 2020.
+
+[20] Kossaifi J., Walecki R., Panagakis Y., “SEWA
+DB: A Rich Database for Audio-Visual Emotion and
+Sentiment Research in the Wild”, 2019.
+
+[17] Saxena A., “Emotion Recognition and
+Detection Methods”, IJIEEE Journal, 2020.
+
+[21] Sharma A., Balouchian P., Foroosh H., “A
+Novel Multi-purpose Deep Architecture for Facial
+Attribute
+and
+Emotion
+Understanding”,
+Iberoamerican Congress on Pattern Recognition,
+2018.
+
+[18] Koujan M.R., Alharbawee L., et al., “Real-time
+Facial Expression Recognition “In The Wild” by
+Disentangling 3D Expression from Identity”, 2020.
+[19] Kumar V.S., Ashish S.N., Gowtham I.V.,
+“Smart driver assistance system using Raspberry Pi
+and sensor networks”, Microprocessors &
+Microsystems, vol. 79, 2020.
+
+[22] Lee J., Kim J., Shin M., “Correlation analysis
+between ECG and PPG data for driver’s drowsiness
+detection using noise replacement method”,
+Procedia Computer Science, vol. 116, 2017.
+
+

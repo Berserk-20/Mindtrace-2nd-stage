@@ -1,0 +1,96 @@
+% ============================================================
+%  CHAPTER 1 — INTRODUCTION
+% ============================================================
+\chapter{Introduction}
+
+\section{Motivation}
+
+The rapid shift toward remote learning, online education, and digital workplaces
+has created an urgent need for tools that can objectively measure learner and
+employee engagement. In a traditional classroom or meeting room, an instructor or
+manager can intuitively observe whether participants are attentive, confused,
+frustrated, or simply disengaged. However, in virtual environments — or even
+large physical classrooms — such qualitative assessment becomes impractical at
+scale.
+
+Research consistently shows that emotional state is one of the strongest
+predictors of learning outcomes and work productivity. A student experiencing
+confusion or frustration is likely to disengage if not promptly supported,
+while a student expressing curiosity or happiness is more likely to retain
+information. Despite this, most e-learning and remote work platforms today
+provide no mechanism for real-time affective feedback.
+
+Advances in deep learning, particularly in facial action recognition and transfer
+learning, now make it computationally feasible to detect human emotions in real
+time using only a standard webcam. MindTrace leverages these advances to build a
+non-invasive, automated engagement tracking system that works entirely through the
+user's existing camera, requiring no wearable sensors, specialised hardware, or
+manual input.
+
+\section{Problem Definition and Objectives}
+
+\subsection{Problem Definition}
+
+To design and implement a real-time emotion recognition and engagement tracking
+system using deep learning that analyses a user's facial expressions through a
+webcam, computes a continuous focus/engagement score, persists session-level
+analytics in a cloud database, and presents insights through an interactive web
+dashboard — all without requiring any specialised hardware beyond a standard
+computer camera.
+
+\subsection{Objectives}
+
+\begin{itemize}
+    \item To detect and classify the emotional state of a user in real time from
+          webcam frames into seven categories: \textit{Angry, Disgust, Fear,
+          Happy, Neutral, Sad,} and \textit{Surprise}.
+
+    \item To estimate head pose (pitch, yaw, roll) and detect attentional
+          distraction when a user looks away from the screen.
+
+    \item To compute a composite engagement/focus score (0--100) by combining
+          emotional state, head pose, and blink rate signals.
+
+    \item To persist all session data, emotion logs, and engagement metrics in a
+          MongoDB database for historical analysis and reporting.
+
+    \item To provide a React-based analytics dashboard offering live emotion
+          overlays, session timelines, emotion distribution charts, and an admin
+          panel for multi-user monitoring.
+
+    \item To secure the system with JWT-based user authentication and bcrypt
+          password hashing, supporting role-based access control for students
+          and administrators.
+
+    \item To deploy the backend on a cloud platform (Hugging Face Spaces) and
+          the frontend on Vercel, enabling fully remote, hardware-independent
+          operation.
+\end{itemize}
+
+\section{Project Scope}
+
+MindTrace is designed for deployment in the following contexts:
+
+\begin{itemize}
+    \item \textbf{Educational Institutions} — Monitoring student engagement
+          during online lectures, self-paced video courses, or e-assessment
+          sessions to identify students at risk of disengagement.
+
+    \item \textbf{Corporate Training} — Tracking employee attention and
+          emotional response during virtual onboarding, compliance training,
+          or skill-development workshops.
+
+    \item \textbf{Remote Work Environments} — Providing managers with
+          aggregated, anonymised team engagement metrics during video
+          conferences or collaborative sessions.
+
+    \item \textbf{Research} — Serving as a data collection and annotation
+          platform for affective computing researchers studying the relationship
+          between emotion and cognitive load.
+\end{itemize}
+
+The system operates entirely client-side for frame capture and relies on a
+RESTful FastAPI backend for model inference, keeping user data private and
+processing load distributed. The modular architecture allows individual
+components — the emotion model, engagement algorithm, or frontend dashboard —
+to be upgraded independently as the project evolves.

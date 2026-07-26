@@ -1,32 +1,47 @@
-# Secrets — NEVER push these
+# Environments
 .env
 .env.local
+.venv
+venv/
+env/
+ENV/
 
-# Python cache
+# Python Cache
 __pycache__/
 *.py[cod]
-*.pyo
+*$py.class
+*.so
 
-# Datasets and training scripts
-dataset/
-dataset1/
-dataset2/
-train*.py
-check_*.py
-verify_*.py
-inspect_*.py
-test_*.py
-create_admin.py
-update_user_name.py
-notifier.py
-
-# Extra model files (only keep models/best_model_rafdb.pth)
-*.pt
-*.ckpt
-!models/best_model_rafdb.pth
-
-# Misc
+# Logs and OS files
 *.log
 Thumbs.db
 .DS_Store
+
+# Data and Models
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.onnx
+dataset/
+dataset1/
+dataset2/
+dataset_ckplus/
+ck+/
+results/
 users.json
+
+# Always include the production model
+!models/best_model_rafdb.pth
+
+# Testing / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# IDE / Editor
+.vscode/
+.idea/

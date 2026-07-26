@@ -1,0 +1,12 @@
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Login : User authenticates
+    Login --> SelectInput : Auth Success
+    SelectInput --> ProcessFrame : Start Session
+    ProcessFrame --> FaceDetection : Frame captured
+    FaceDetection --> EmotionInference : Face detected
+    EmotionInference --> EngagementScoring : Emotion classified
+    EngagementScoring --> NotifyDashboard : Score computed
+    NotifyDashboard --> StoreSession : Next frame or Stop
+    StoreSession --> [*] : Session ends
+    NotifyDashboard --> ProcessFrame : Next frame
