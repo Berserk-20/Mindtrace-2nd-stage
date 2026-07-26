@@ -327,16 +327,20 @@ def get_user_summary():
 
     for u in users:
         uid = str(u["_id"])
-        user_sessions = list(sessions_col.find({"user_id": uid}, {"_id": 1}))
+        email = u.get("email", "")
+        user_sessions = list(sessions_col.find({"user_id": email}))
         session_ids = [str(s["_id"]) for s in user_sessions]
         emotion_count = emotions_col.count_documents({"session_id": {"$in": session_ids}}) if session_ids else 0
+        active_sessions_count = sum(1 for s in user_sessions if s.get("status") == "running" or s.get("end_time") is None)
+        
         summary.append({
             "user_id": uid,
             "name": u.get("name", "Unknown"),
-            "email": u.get("email", ""),
+            "email": email,
             "role": u["role"],
             "total_sessions": len(session_ids),
-            "total_emotions": emotion_count
+            "total_emotions": emotion_count,
+            "active_sessions": active_sessions_count
         })
 
     return summary

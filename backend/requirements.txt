@@ -14,3 +14,8 @@ Pillow
 pymongo
 gunicorn==21.2.0
 python-dotenv==1.0.1
+# ── Research / Training ──────────────────────────────────────────────
+scikit-learn      # metrics: classification_report, confusion_matrix, f1_score
+tqdm              # progress bars during training
+pandas            # FER2013 CSV loading
+timm              # ViT-Small/16 and other transformer backbones

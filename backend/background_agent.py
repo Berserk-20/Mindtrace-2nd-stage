@@ -87,7 +87,7 @@ CONFIDENCE_THRESHOLD = 0.4
 # RAF-DB emotion classes (7 emotions)
 RAF_DB_EMOTIONS = ["Angry", "Disgust", "Fear", "Happy", "Neutral", "Sad", "Surprise"]
 EMOTIONS = RAF_DB_EMOTIONS  # Use RAF-DB classes
-emotion_buffer = deque(maxlen=6)
+emotion_buffer = deque(maxlen=2)
 
 # ==============================
 # MEDIAPIPE SETUP
@@ -281,6 +281,7 @@ def get_engagement_score(emotion, is_looking_away=False, blink_rate=15):
     elif blink_rate < 5: # Intense Focus (Staring)
         score += 10
         
+        
     # Clamp score
     return max(0, min(100, score))
 
@@ -357,8 +358,8 @@ def process_single_frame(frame):
             if conf < CONFIDENCE_THRESHOLD:
                 emotion = "Neutral"
 
-            emotion_buffer.append(emotion)
-            last_emotion = max(set(emotion_buffer), key=emotion_buffer.count)
+            # Use raw emotion instantly (no buffering delay)
+            last_emotion = emotion
 
             # Update shared state history
             with shared_state.DATA_LOCK:
@@ -379,20 +380,27 @@ def process_single_frame(frame):
                     "blink_rate": bpm
                 })
                 
-                if len(shared_state.EMOTION_HISTORY) > 1000:
+                if len(shared_state.EMOTION_HISTORY) > 2400:
                     shared_state.EMOTION_HISTORY.pop(0)
-                if len(shared_state.ENGAGEMENT_HISTORY) > 1000:
+                if len(shared_state.ENGAGEMENT_HISTORY) > 2400:
                     shared_state.ENGAGEMENT_HISTORY.pop(0)
                     
+            # Return bounding box as fractions of frame size (resolution-independent)
             return {
                 "emotion": last_emotion, 
                 "focus_score": eng_score, 
                 "face_found": True, 
-                "confidence": float(conf)
+                "confidence": float(conf),
+                "bbox": {
+                    "x": x_min / w,
+                    "y": y_min / h,
+                    "width": (x_max - x_min) / w,
+                    "height": (y_max - y_min) / h
+                }
             }
             
     # If no face found
-    return {"emotion": "Neutral", "focus_score": 0, "face_found": False, "confidence": 1.0}
+    return {"emotion": "Neutral", "focus_score": 0, "face_found": False, "confidence": 1.0, "bbox": None}
 
 # ==============================
 # SESSION CONTROLS

@@ -1,0 +1,39 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="brainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Brain outline with circuit traces -->
+  <path d="M16 3C11.5 3 8 6.5 8 10.5C8 11.2 8.1 11.9 8.3 12.5C7.5 13.2 7 14.3 7 15.5C7 17.4 8.3 19 10 19.5C10 20.5 10.3 21.4 10.8 22.2C11.5 23.3 12.6 24.1 13.9 24.5C14.2 27.2 15.8 29 18 29C20.2 29 21.8 27.2 22.1 24.5C23.4 24.1 24.5 23.3 25.2 22.2C25.7 21.4 26 20.5 26 19.5C27.7 19 29 17.4 29 15.5C29 14.3 28.5 13.2 27.7 12.5C27.9 11.9 28 11.2 28 10.5C28 6.5 24.5 3 20 3C19.2 3 18.5 3.1 17.8 3.3C17.3 3.1 16.7 3 16 3Z" 
+        stroke="url(#brainGradient)" 
+        stroke-width="1.5" 
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+  
+  <!-- Neural nodes -->
+  <circle cx="12" cy="11" r="1.5" fill="url(#brainGradient)"/>
+  <circle cx="16" cy="9" r="1.5" fill="url(#brainGradient)"/>
+  <circle cx="20" cy="11" r="1.5" fill="url(#brainGradient)"/>
+  <circle cx="14" cy="15" r="1.5" fill="url(#brainGradient)"/>
+  <circle cx="18" cy="15" r="1.5" fill="url(#brainGradient)"/>
+  <circle cx="16" cy="20" r="1.5" fill="url(#brainGradient)"/>
+  
+  <!-- Connection traces -->
+  <path d="M12 11L14 15M16 9L14 15M20 11L18 15M14 15L16 20M18 15L16 20" 
+        stroke="url(#brainGradient)" 
+        stroke-width="1" 
+        opacity="0.6"
+        stroke-linecap="round"/>
+  
+  <!-- Data wave pattern -->
+  <path d="M5 26Q8 24 11 26T17 26T23 26T29 26" 
+        stroke="url(#brainGradient)" 
+        stroke-width="1.5" 
+        fill="none"
+        opacity="0.4"
+        stroke-linecap="round"/>
+</svg>
